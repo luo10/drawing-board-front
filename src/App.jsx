@@ -19,13 +19,9 @@ const Canvas = styled.canvas`
   border: 1px solid #ccc;
   margin-bottom: 20px;
   touch-action: none;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
   user-select: none;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  background-color: white; // 确保背景为纯白
 `;
 
 const ButtonGroup = styled.div`
@@ -204,15 +200,24 @@ function App() {
     
     // 初始化画布
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext('2d', { alpha: false }); // 禁用alpha通道
     
     canvas.width = 600;
     canvas.height = 400;
+
+    // 先填充白色背景
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, canvas.width, canvas.height);
     
-    context.strokeStyle = '#111111'; // 设置画笔颜色为深黑色
-    context.lineWidth = 2;
+    // 设置画笔属性
+    context.globalAlpha = 1.0; // 设置完全不透明
+    context.globalCompositeOperation = 'source-over';
+    context.strokeStyle = 'black';
+    context.fillStyle = 'black';
+    context.lineWidth = 3;
     context.lineCap = 'round';
     context.lineJoin = 'round';
+    context.imageSmoothingEnabled = false; // 禁用抗锯齿
     contextRef.current = context;
 
     // 绘制背景
@@ -314,15 +319,24 @@ function App() {
   useEffect(() => {
     if (showDrawingBoard && canvasRef.current) {
       const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
+      const context = canvas.getContext('2d', { alpha: false }); // 禁用alpha通道
       
       canvas.width = 600;
       canvas.height = 400;
+
+      // 先填充白色背景
+      context.fillStyle = 'white';
+      context.fillRect(0, 0, canvas.width, canvas.height);
       
-      context.strokeStyle = '#111111'; // 设置画笔颜色为深黑色
-      context.lineWidth = 2;
+      // 设置画笔属性
+      context.globalAlpha = 1.0; // 设置完全不透明
+      context.globalCompositeOperation = 'source-over';
+      context.strokeStyle = 'black';
+      context.fillStyle = 'black';
+      context.lineWidth = 3;
       context.lineCap = 'round';
       context.lineJoin = 'round';
+      context.imageSmoothingEnabled = false; // 禁用抗锯齿
       contextRef.current = context;
 
       // 绘制背景
@@ -364,7 +378,11 @@ function App() {
         const canvas = canvasRef.current;
         const context = contextRef.current;
         context.clearRect(0, 0, canvas.width, canvas.height);
-        context.strokeStyle = '#111111'; // 确保画笔颜色为深黑色
+        context.globalAlpha = 1.0; // 设置完全不透明
+        context.globalCompositeOperation = 'source-over';
+        context.strokeStyle = 'black';
+        context.fillStyle = 'black';
+        context.lineWidth = 3;
         if (challenges[currentChallenge + 1].drawBackground) {
           challenges[currentChallenge + 1].drawBackground(context);
         }
@@ -458,7 +476,12 @@ function App() {
           
           const ctx = contextRef.current;
           const pressure = point.pressure;
-          ctx.lineWidth = 2 * (pressure * 1.5);
+          ctx.globalAlpha = 1.0;
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.lineWidth = 3 * (pressure * 1.5); // 基于3的线宽进行压感调整
+          ctx.strokeStyle = 'black';
+          ctx.fillStyle = 'black';
+          ctx.imageSmoothingEnabled = false;
           
           ctx.lineTo(point.x, point.y);
           ctx.stroke();
