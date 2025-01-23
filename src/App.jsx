@@ -9,6 +9,10 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 20px;
+  user-select: none; 
+  touch-action: none; 
+  -webkit-touch-callout: none; 
+  -webkit-user-select: none; 
 `;
 
 const Canvas = styled.canvas`
@@ -28,6 +32,8 @@ const ButtonGroup = styled.div`
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
+  user-select: none;
+  -webkit-user-select: none;
 `;
 
 const Button = styled.button`
@@ -40,6 +46,9 @@ const Button = styled.button`
   &:disabled {
     background-color: #ccc;
   }
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation; 
 `;
 
 const Stats = styled.div`
@@ -47,6 +56,8 @@ const Stats = styled.div`
   text-align: left;
   width: 100%;
   max-width: 600px;
+  user-select: none;
+  -webkit-user-select: none;
 `;
 
 const UserInfo = styled.div`
@@ -57,6 +68,8 @@ const UserInfo = styled.div`
   border-radius: 4px;
   font-size: 14px;
   color: #666;
+  user-select: none;
+  -webkit-user-select: none;
 `;
 
 const NameInput = styled.input`
@@ -77,6 +90,8 @@ const Countdown = styled.div`
   padding: 20px;
   border-radius: 10px;
   z-index: 1000;
+  user-select: none;
+  -webkit-user-select: none;
 `;
 
 const Challenge = styled.div`
@@ -84,6 +99,8 @@ const Challenge = styled.div`
   font-size: 24px;
   font-weight: bold;
   color: #333;
+  user-select: none;
+  -webkit-user-select: none;
 `;
 
 const challenges = [
@@ -369,6 +386,25 @@ function App() {
       finishDrawing();
     }
   }, [timeLeft, showDrawingBoard]);
+
+  useEffect(() => {
+    // 添加防止页面滚动和缩放的处理
+    const preventDefault = (e) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener('touchmove', preventDefault, { passive: false });
+    document.addEventListener('gesturestart', preventDefault);
+    document.addEventListener('gesturechange', preventDefault);
+    document.addEventListener('gestureend', preventDefault);
+
+    return () => {
+      document.removeEventListener('touchmove', preventDefault);
+      document.removeEventListener('gesturestart', preventDefault);
+      document.removeEventListener('gesturechange', preventDefault);
+      document.removeEventListener('gestureend', preventDefault);
+    };
+  }, []);
 
   if (!user) {
     return <Login onLogin={handleLogin} />;
