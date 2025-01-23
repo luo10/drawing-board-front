@@ -192,7 +192,7 @@ function App() {
     canvas.width = 600;
     canvas.height = 400;
     
-    context.strokeStyle = 'black';
+    context.strokeStyle = '#111111'; // 设置画笔颜色为深黑色
     context.lineWidth = 2;
     context.lineCap = 'round';
     context.lineJoin = 'round';
@@ -257,7 +257,7 @@ function App() {
   };
 
   // 提交绘画
-  const submitDrawing = async () => {
+  const submitDrawing = () => {
     if (drawingName.length === 0) {
       alert('请输入画作名称！');
       return;
@@ -266,51 +266,13 @@ function App() {
       alert('画作名称不能超过8个字符！');
       return;
     }
-
-    try {
-      const canvas = canvasRef.current;
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-      
-      const file = new File([blob], `${drawingName}.png`, {
-        type: 'image/png',
-        lastModified: new Date(),
-      });
-
-      await fileApi.uploadFile(file);
-      
-      // 重置状态
-      setIsInputtingName(false);
-      setDrawingName('');
-      setShowCountdown(true);
-      setCountdownValue(5);
-      setCanDraw(true);
-      
-      // 清空画布状态
-      setHistory([]);
-      setHistoryIndex(-1);
-      setStrokeCount(0);
-      setUndoCount(0);
-      setRedoCount(0);
-      setStartTime(new Date());
-      setEndTime(null);
-      
-      // 进入下一个挑战
-      if (currentChallenge < challenges.length - 1) {
-        setCurrentChallenge(prev => prev + 1);
-        // 重新初始化画布
-        const context = contextRef.current;
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        if (challenges[currentChallenge + 1].drawBackground) {
-          challenges[currentChallenge + 1].drawBackground(context);
-        }
-        saveState();
-      } else {
-        alert('恭喜你完成了所有绘画挑战！');
-      }
-    } catch (error) {
-      console.error('Error uploading drawing:', error);
-      alert('保存失败，请重试');
-    }
+    
+    // 重置状态
+    setIsInputtingName(false);
+    setDrawingName('');
+    setShowCountdown(true);
+    setCountdownValue(5);
+    setCanDraw(false); // 倒计时时禁止绘画
   };
 
   useEffect(() => {
@@ -321,7 +283,7 @@ function App() {
       canvas.width = 600;
       canvas.height = 400;
       
-      context.strokeStyle = 'black';
+      context.strokeStyle = '#111111'; // 设置画笔颜色为深黑色
       context.lineWidth = 2;
       context.lineCap = 'round';
       context.lineJoin = 'round';
@@ -347,6 +309,33 @@ function App() {
       return () => clearInterval(timer);
     } else if (showCountdown && countdownValue === 0) {
       setShowCountdown(false);
+      // 倒计时结束后再进入下一题
+      // 清空画布状态
+      setHistory([]);
+      setHistoryIndex(-1);
+      setStrokeCount(0);
+      setUndoCount(0);
+      setRedoCount(0);
+      setStartTime(new Date());
+      setEndTime(null);
+      setTimeLeft(600); // 重置时间为10分钟
+      setCanDraw(true); // 允许绘画
+      
+      // 进入下一个挑战
+      if (currentChallenge < challenges.length - 1) {
+        setCurrentChallenge(prev => prev + 1);
+        // 重新初始化画布
+        const canvas = canvasRef.current;
+        const context = contextRef.current;
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.strokeStyle = '#111111'; // 确保画笔颜色为深黑色
+        if (challenges[currentChallenge + 1].drawBackground) {
+          challenges[currentChallenge + 1].drawBackground(context);
+        }
+        saveState();
+      } else {
+        alert('恭喜你完成了所有绘画挑战！');
+      }
     }
   }, [showCountdown, countdownValue]);
 
