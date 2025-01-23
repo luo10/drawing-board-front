@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import Login from './components/Login';
 import Instructions from './components/Instructions';
 import { fileApi } from './services/api';
+import { API_CONFIG } from './config/api';
 
 const Container = styled.div`
   display: flex;
@@ -193,40 +194,23 @@ function App() {
     setShowInstructions(true); // 登录后显示注意事项
   };
 
-  const handleStartDrawing = () => {
-    setShowInstructions(false);
-    setShowDrawingBoard(true);
-    setStartTime(new Date());
-    
-    // 初始化画布
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d', { alpha: false }); // 禁用alpha通道
-    
-    canvas.width = 600;
-    canvas.height = 400;
+  const handleStartDrawing = async () => {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GENERATE_EXAM}?student_id=${user.student_id}`, {
+        method: 'GET',
+      });
 
-    // 先填充白色背景
-    context.fillStyle = 'white';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // 设置画笔属性
-    context.globalAlpha = 1.0; // 设置完全不透明
-    context.globalCompositeOperation = 'source-over';
-    context.strokeStyle = 'black';
-    context.fillStyle = 'black';
-    context.lineWidth = 3;
-    context.lineCap = 'round';
-    context.lineJoin = 'round';
-    context.imageSmoothingEnabled = false; // 禁用抗锯齿
-    contextRef.current = context;
+      const data = await response.json();
+      if (data.status_code !== 0 || !data.data.exam_id) {
+        throw new Error(data.message || '生成题目失败');
+      }
 
-    // 绘制背景
-    if (challenges[currentChallenge].drawBackground) {
-      challenges[currentChallenge].drawBackground(context);
+      setShowInstructions(false);
+      setShowDrawingBoard(true);
+      setStartTime(new Date());
+    } catch (err) {
+      alert(err.message || '生成题目失败，请稍后重试');
     }
-
-    // 保存初始状态
-    saveState();
   };
 
   // 保存画布状态

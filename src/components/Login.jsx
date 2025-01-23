@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
+import { API_CONFIG } from '../config/api';
 
 const LoginContainer = styled.div`
   display: flex;
@@ -97,7 +98,7 @@ function Login({ onLogin }) {
     setError('');
 
     try {
-      const response = await fetch('https://yassin-rj.xyz/drawing/api/auth/v1/login', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
