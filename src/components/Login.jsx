@@ -97,7 +97,7 @@ function Login({ onLogin }) {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:9008/api/auth/v1/login', {
+      const response = await fetch('https://yassin-rj.xyz/drawing/api/auth/v1/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
