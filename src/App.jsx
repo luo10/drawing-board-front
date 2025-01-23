@@ -212,7 +212,10 @@ function App() {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
     const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(canvas.toDataURL());
+    newHistory.push({
+      imageData: canvas.toDataURL(),
+      challenge: currentChallenge
+    });
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
   };
@@ -220,32 +223,48 @@ function App() {
   // 撤销
   const undo = () => {
     if (historyIndex > 0) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      img.src = history[historyIndex - 1];
-      img.onload = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        setHistoryIndex(prev => prev - 1);
-        setUndoCount(prev => prev + 1);
-      };
+      let prevIndex = historyIndex - 1;
+      // 找到属于当前题目的上一个状态
+      while (prevIndex >= 0 && history[prevIndex].challenge !== currentChallenge) {
+        prevIndex--;
+      }
+      
+      if (prevIndex >= 0) {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.src = history[prevIndex].imageData;
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          setHistoryIndex(prevIndex);
+          setUndoCount(prev => prev + 1);
+        };
+      }
     }
   };
 
   // 重做
   const redo = () => {
     if (historyIndex < history.length - 1) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      img.src = history[historyIndex + 1];
-      img.onload = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        setHistoryIndex(prev => prev + 1);
-        setRedoCount(prev => prev + 1);
-      };
+      let nextIndex = historyIndex + 1;
+      // 找到属于当前题目的下一个状态
+      while (nextIndex < history.length && history[nextIndex].challenge !== currentChallenge) {
+        nextIndex++;
+      }
+      
+      if (nextIndex < history.length) {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.src = history[nextIndex].imageData;
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          setHistoryIndex(nextIndex);
+          setRedoCount(prev => prev + 1);
+        };
+      }
     }
   };
 
@@ -429,8 +448,8 @@ function App() {
       />
       
       <ButtonGroup>
-        <Button onClick={undo} disabled={!canDraw || historyIndex <= 0}>撤销</Button>
-        <Button onClick={redo} disabled={!canDraw || historyIndex >= history.length - 1}>重做</Button>
+        <Button onClick={undo} disabled={!canDraw || !history.slice(0, historyIndex).some(h => h.challenge === currentChallenge)}>撤销</Button>
+        <Button onClick={redo} disabled={!canDraw || !history.slice(historyIndex + 1).some(h => h.challenge === currentChallenge)}>重做</Button>
         <Button onClick={finishDrawing} disabled={!canDraw}>完成绘画</Button>
       </ButtonGroup>
       
