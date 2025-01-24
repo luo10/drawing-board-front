@@ -106,7 +106,7 @@ const challenges = [
     ctx.beginPath();
     ctx.ellipse(300, 200, 100, 70, 0, 0, 2 * Math.PI);
     ctx.stroke();
-    // 画两个三角形耳朵
+    // 画两个三角形ears
     ctx.beginPath();
     ctx.moveTo(220, 140);
     ctx.lineTo(250, 100);
@@ -205,6 +205,9 @@ function App() {
         throw new Error(data.message || '生成题目失败');
       }
 
+      // 更新user对象，添加exam_id
+      setUser(prev => ({ ...prev, exam_id: data.data.exam_id }));
+
       setShowInstructions(false);
       setShowDrawingBoard(true);
       setStartTime(new Date());
@@ -282,7 +285,7 @@ function App() {
   };
 
   // 提交绘画
-  const submitDrawing = () => {
+  const submitDrawing = async () => {
     if (drawingName.length === 0) {
       alert('请输入画作名称！');
       return;
@@ -291,13 +294,45 @@ function App() {
       alert('画作名称不能超过8个字符！');
       return;
     }
-    
-    // 重置状态
-    setIsInputtingName(false);
-    setDrawingName('');
-    setShowCountdown(true);
-    setCountdownValue(5);
-    setCanDraw(false); // 倒计时时禁止绘画
+
+    try {
+      // 获取画布数据并转换为blob
+      const canvas = canvasRef.current;
+      const blob = await new Promise(resolve => canvas.toBlob(resolve));
+      const file = new File([blob], `${drawingName}.png`, { type: 'image/png' });
+
+      // 创建FormData对象
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('exam_id', user.exam_id);
+      formData.append('student_id', user.student_id);
+      formData.append('subject_title', challenges[currentChallenge].title);
+      formData.append('img_name', drawingName);
+      formData.append('used_time', Math.floor((new Date() - startTime) / 1000));
+      formData.append('drawn_strokes', strokeCount);
+      formData.append('undo_count', undoCount);
+      formData.append('redo_count', redoCount);
+
+      // 发送请求
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPLOAD_SUBJECT}`, {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+      if (data.status_code !== 0) {
+        throw new Error(data.message || '提交失败');
+      }
+
+      // 重置状态
+      setIsInputtingName(false);
+      setDrawingName('');
+      setShowCountdown(true);
+      setCountdownValue(5);
+      setCanDraw(false); // 倒计时时禁止绘画
+    } catch (err) {
+      alert(err.message || '提交失败，请稍后重试');
+    }
   };
 
   useEffect(() => {
