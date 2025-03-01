@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import styled from 'styled-components';
-import { API_CONFIG } from '../config/api';
+import { useState } from "react";
+import styled from "styled-components";
+import { API_CONFIG } from "../config/api";
 
 const LoginContainer = styled.div`
   display: flex;
@@ -30,11 +30,11 @@ const Input = styled.input`
   background-color: white;
   -webkit-appearance: none;
   appearance: none;
-  
+
   &:focus {
     outline: none;
     border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
   }
 `;
 
@@ -50,11 +50,11 @@ const Button = styled.button`
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  
+
   &:hover {
     background-color: #0056b3;
   }
-  
+
   &:disabled {
     background-color: #ccc;
   }
@@ -69,7 +69,7 @@ const Form = styled.form`
   padding: 30px;
   background-color: white;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 `;
 
 const ErrorMessage = styled.div`
@@ -80,39 +80,42 @@ const ErrorMessage = styled.div`
 `;
 
 function Login({ onLogin }) {
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const name = formData.get('name');
-    const studentId = formData.get('studentId');
+    const name = formData.get("name");
+    const studentId = formData.get("studentId");
 
     if (!name || !studentId) {
-      setError('请填写完整信息');
+      setError("请填写完整信息");
       return;
     }
 
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ "username": name, "student_id": studentId })
-      });
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username: name, student_id: studentId }),
+        }
+      );
 
       const data = await response.json();
       if (data.status_code !== 0) {
-        throw new Error(data.message || '登录失败');
+        throw new Error(data.message || "登录失败");
       }
       onLogin(data);
     } catch (err) {
-      setError(err.message || '登录失败，请稍后重试');
+      setError(err.message || "登录失败，请稍后重试");
     } finally {
       setIsLoading(false);
     }
@@ -146,7 +149,7 @@ function Login({ onLogin }) {
           disabled={isLoading}
         />
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? '登录中...' : '登录'}
+          {isLoading ? "登录中..." : "登录"}
         </Button>
         {error && <ErrorMessage>{error}</ErrorMessage>}
       </Form>
