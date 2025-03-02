@@ -1,188 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
 import Login from "./components/Login";
 import Instructions from "./components/Instructions";
 import { fileApi } from "./services/api";
 import { API_CONFIG } from "./config/api";
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  user-select: none;
-  touch-action: none;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-`;
-
-const Canvas = styled.canvas`
-  border: 1px solid #ccc;
-  margin-bottom: 20px;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  background-color: white; // 确保背景为纯白
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  user-select: none;
-  -webkit-user-select: none;
-`;
-
-const Button = styled.button`
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  &:disabled {
-    background-color: #ccc;
-  }
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: manipulation;
-`;
-
-const Stats = styled.div`
-  margin-bottom: 20px;
-  text-align: left;
-  width: 100%;
-  max-width: 600px;
-  user-select: none;
-  -webkit-user-select: none;
-`;
-
-const UserInfo = styled.div`
-  margin-bottom: 20px;
-  text-align: right;
-  padding: 10px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  font-size: 14px;
-  color: #666;
-  user-select: none;
-  -webkit-user-select: none;
-`;
-
-const NameInput = styled.input`
-  padding: 8px;
-  margin-right: 10px;
-  width: 200px;
-`;
-
-const Countdown = styled.div`
-  font-size: 48px;
-  font-weight: bold;
-  color: #007bff;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.9);
-  padding: 20px;
-  border-radius: 10px;
-  z-index: 1000;
-  user-select: none;
-  -webkit-user-select: none;
-`;
-
-const Challenge = styled.div`
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-  user-select: none;
-  -webkit-user-select: none;
-`;
-
-const challenges = [
-  {
-    title: "画一只可爱的小猫",
-    drawBackground: (ctx) => {
-      ctx.strokeStyle = "#ddd";
-      ctx.beginPath();
-      ctx.ellipse(300, 200, 100, 70, 0, 0, 2 * Math.PI);
-      ctx.stroke();
-      // 画两个三角形ears
-      ctx.beginPath();
-      ctx.moveTo(220, 140);
-      ctx.lineTo(250, 100);
-      ctx.lineTo(280, 140);
-      ctx.moveTo(320, 140);
-      ctx.lineTo(350, 100);
-      ctx.lineTo(380, 140);
-      ctx.stroke();
-    },
-  },
-  {
-    title: "画一朵美丽的花",
-    drawBackground: (ctx) => {
-      ctx.strokeStyle = "#ddd";
-      ctx.beginPath();
-      ctx.arc(300, 200, 50, 0, 2 * Math.PI);
-      ctx.moveTo(300, 250);
-      ctx.lineTo(300, 350);
-      ctx.stroke();
-    },
-  },
-  {
-    title: "画一座山",
-    drawBackground: (ctx) => {
-      ctx.strokeStyle = "#ddd";
-      ctx.beginPath();
-      ctx.moveTo(100, 350);
-      ctx.lineTo(300, 100);
-      ctx.lineTo(500, 350);
-      ctx.stroke();
-    },
-  },
-  {
-    title: "画一条小船",
-    drawBackground: (ctx) => {
-      ctx.strokeStyle = "#ddd";
-      ctx.beginPath();
-      ctx.moveTo(200, 250);
-      ctx.lineTo(400, 250);
-      ctx.lineTo(450, 300);
-      ctx.lineTo(150, 300);
-      ctx.closePath();
-      ctx.stroke();
-    },
-  },
-  {
-    title: "画一棵大树",
-    drawBackground: (ctx) => {
-      ctx.strokeStyle = "#ddd";
-      ctx.beginPath();
-      ctx.moveTo(300, 350);
-      ctx.lineTo(300, 150);
-      ctx.moveTo(300, 150);
-      ctx.arc(300, 150, 80, 0, Math.PI, true);
-      ctx.stroke();
-    },
-  },
-  {
-    title: "画一个房子",
-    drawBackground: (ctx) => {
-      ctx.strokeStyle = "#ddd";
-      ctx.beginPath();
-      ctx.moveTo(200, 250);
-      ctx.lineTo(400, 250);
-      ctx.lineTo(400, 350);
-      ctx.lineTo(200, 350);
-      ctx.closePath();
-      ctx.moveTo(200, 250);
-      ctx.lineTo(300, 150);
-      ctx.lineTo(400, 250);
-      ctx.stroke();
-    },
-  },
-];
+import { challenges } from "./data/challenges";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -212,6 +33,9 @@ function App() {
   const [currentStrokeStartTime, setCurrentStrokeStartTime] = useState(null); // 当前笔画开始时间
   // 添加新的状态变量
   const [firstStrokeDelay, setFirstStrokeDelay] = useState(null); // 首笔延迟（秒）
+  const [hasStartedDrawing, setHasStartedDrawing] = useState(false);
+  const [showStartButton, setShowStartButton] = useState(false); // 添加控制开始绘画按钮显示的状态
+  const [totalUsedTime, setTotalUsedTime] = useState(0); // 添加累计总用时状态
 
   const handleLogin = (data) => {
     setUser(data.data);
@@ -237,9 +61,26 @@ function App() {
 
       setShowInstructions(false);
       setShowDrawingBoard(true);
-      setStartTime(new Date());
+      setShowStartButton(true); // 第一次进入绘画界面时显示开始按钮
     } catch (err) {
       alert(err.message || "生成题目失败，请稍后重试");
+    }
+  };
+
+  // 添加在其他处理函数附近
+  const handleStartDrawingSession = () => {
+    setHasStartedDrawing(true);
+    setStartTime(new Date());
+    setCanDraw(true);
+    setShowStartButton(false); // 点击开始后隐藏开始按钮
+
+    // 开始绘画时绘制背景提示
+    if (canvasRef.current && contextRef.current) {
+      const context = contextRef.current;
+      if (challenges[currentChallenge].drawBackground) {
+        challenges[currentChallenge].drawBackground(context);
+      }
+      saveState(); // 保存带有背景提示的初始状态
     }
   };
 
@@ -312,7 +153,15 @@ function App() {
 
   // 完成绘画
   const finishDrawing = () => {
-    setEndTime(new Date());
+    const endTimeNow = new Date();
+    setEndTime(endTimeNow);
+
+    // 计算当前绘画任务的用时并累加到总用时
+    if (startTime) {
+      const currentTaskTime = (endTimeNow - startTime) / 1000; // 转换为秒
+      setTotalUsedTime((prev) => prev + currentTaskTime);
+    }
+
     setIsInputtingName(true);
     setCanDraw(false);
   };
@@ -337,7 +186,7 @@ function App() {
       });
 
       // 计算绘画总时长（秒）
-      const totalDrawingTime = Math.floor((new Date() - startTime) / 1000);
+      const totalDrawingTime = Math.floor(totalUsedTime);
 
       // 计算首次落笔时间（相对于开始时间，单位秒）
       const firstStrokeDelayValue = firstStrokeDelay || 0;
@@ -380,10 +229,14 @@ function App() {
       setShowCountdown(true);
       setCountdownValue(5);
       setCanDraw(false); // 倒计时时禁止绘画
-      // 重置统计指标
+      setHasStartedDrawing(false); // 重置开始绘画状态
+      // 不重置总用时，因为需要累计
+      // 重置其他统计指标
       setFirstStrokeTime(null);
       setTotalStrokeDuration(0);
       setFirstStrokeDelay(null);
+      setStartTime(null);
+      setEndTime(null);
     } catch (err) {
       alert(err.message || "提交失败，请稍后重试");
     }
@@ -412,15 +265,15 @@ function App() {
       context.imageSmoothingEnabled = false; // 禁用抗锯齿
       contextRef.current = context;
 
-      // 绘制背景
-      if (challenges[currentChallenge].drawBackground) {
+      // 只有在已经开始绘画的状态下才绘制背景提示
+      if (hasStartedDrawing && challenges[currentChallenge].drawBackground) {
         challenges[currentChallenge].drawBackground(context);
       }
 
       // 保存初始状态
       saveState();
     }
-  }, [showDrawingBoard, currentChallenge]);
+  }, [showDrawingBoard, currentChallenge, hasStartedDrawing]);
 
   // 倒计时效果
   useEffect(() => {
@@ -439,14 +292,20 @@ function App() {
       setStrokeCount(0);
       setUndoCount(0);
       setRedoCount(0);
-      setStartTime(new Date());
-      setEndTime(null);
       setTimeLeft(300); // 重置时间为5分钟
-      setCanDraw(true); // 允许绘画
+      setCanDraw(false); // 初始不允许绘画，等点击开始按钮后才允许
+      setHasStartedDrawing(false); // 重置开始绘画状态
       // 重置绘画统计指标
       setFirstStrokeTime(null);
       setTotalStrokeDuration(0);
       setCurrentStrokeStartTime(null);
+      setStartTime(null); // 重置每张图的开始时间
+      setEndTime(null); // 重置每张图的结束时间
+
+      // 如果已经完成所有挑战，重置总用时
+      if (currentChallenge >= challenges.length - 1) {
+        setTotalUsedTime(0);
+      }
 
       // 进入下一个挑战
       if (currentChallenge < challenges.length - 1) {
@@ -455,24 +314,26 @@ function App() {
         const canvas = canvasRef.current;
         const context = contextRef.current;
         context.clearRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "white";
+        context.fillRect(0, 0, canvas.width, canvas.height);
         context.globalAlpha = 1.0; // 设置完全不透明
         context.globalCompositeOperation = "source-over";
         context.strokeStyle = "black";
         context.fillStyle = "black";
         context.lineWidth = 3;
-        if (challenges[currentChallenge + 1].drawBackground) {
-          challenges[currentChallenge + 1].drawBackground(context);
-        }
         saveState();
+
+        // 倒计时结束后显示开始按钮
+        setShowStartButton(true);
       } else {
         alert("恭喜你完成了所有绘画挑战！");
       }
     }
   }, [showCountdown, countdownValue]);
 
-  // 时间限制
+  // 修改时间限制的useEffect
   useEffect(() => {
-    if (showDrawingBoard && timeLeft > 0) {
+    if (showDrawingBoard && hasStartedDrawing && timeLeft > 0) {
       const timer = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
@@ -480,7 +341,7 @@ function App() {
     } else if (timeLeft === 0) {
       finishDrawing();
     }
-  }, [timeLeft, showDrawingBoard]);
+  }, [timeLeft, showDrawingBoard, hasStartedDrawing]);
 
   useEffect(() => {
     // 添加防止页面滚动和缩放的处理
@@ -507,115 +368,132 @@ function App() {
 
   if (showInstructions) {
     return (
-      <Container>
-        <UserInfo>
+      <div className="flex flex-col items-center p-5 select-none touch-none">
+        <div className="mb-5 text-right p-2.5 bg-gray-100 rounded text-sm text-gray-600 select-none">
           欢迎你，{user.username} (学号: {user.student_id})
-        </UserInfo>
+        </div>
         <Instructions onStart={handleStartDrawing} />
-      </Container>
+      </div>
     );
   }
 
   return (
-    <Container>
-      <UserInfo>
+    <div className="flex flex-col items-center p-5 select-none touch-none">
+      <div className="mb-5 text-right p-2.5 bg-gray-100 rounded text-sm text-gray-600 select-none">
         欢迎你，{user.username} (学号: {user.student_id})
-      </UserInfo>
-      <Challenge>{challenges[currentChallenge].title}</Challenge>
+      </div>
+      <div className="mb-5 text-2xl font-bold text-gray-800 select-none">
+        {challenges[currentChallenge].title}
+      </div>
       <div>
         剩余时间: {Math.floor(timeLeft / 60)}:
         {(timeLeft % 60).toString().padStart(2, "0")}
       </div>
-      <Canvas
-        ref={canvasRef}
-        onPointerDown={(e) => {
-          if (!canDraw) return;
-          const rect = e.currentTarget.getBoundingClientRect();
-          const point = {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-            pressure: e.pressure || 1,
-          };
-          setLastPoint(point);
-          setIsDrawing(true);
-          setStrokeCount((prev) => prev + 1);
+      <div className="relative">
+        <canvas
+          ref={canvasRef}
+          className="border border-gray-300 mb-5 touch-none select-none bg-white"
+          onPointerDown={(e) => {
+            if (!canDraw || !hasStartedDrawing) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const point = {
+              x: e.clientX - rect.left,
+              y: e.clientY - rect.top,
+              pressure: e.pressure || 1,
+            };
+            setLastPoint(point);
+            setIsDrawing(true);
+            setStrokeCount((prev) => prev + 1);
 
-          // 记录首次落笔时间和延迟
-          if (!firstStrokeTime) {
-            const now = new Date();
-            setFirstStrokeTime(now);
-            // 直接计算并存储延迟（秒）
-            setFirstStrokeDelay(Math.floor((now - startTime) / 1000));
-          }
-
-          // 记录当前笔画开始时间
-          setCurrentStrokeStartTime(new Date());
-
-          e.currentTarget.setPointerCapture(e.pointerId);
-
-          const ctx = contextRef.current;
-          ctx.beginPath();
-          ctx.moveTo(point.x, point.y);
-        }}
-        onPointerMove={(e) => {
-          if (!canDraw || !isDrawing || !lastPoint) return;
-          const rect = e.currentTarget.getBoundingClientRect();
-          const point = {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-            pressure: e.pressure || 1,
-          };
-
-          const ctx = contextRef.current;
-          const pressure = point.pressure;
-          ctx.globalAlpha = 1.0;
-          ctx.globalCompositeOperation = "source-over";
-          ctx.lineWidth = 3 * (pressure * 1.5); // 基于3的线宽进行压感调整
-          ctx.strokeStyle = "black";
-          ctx.fillStyle = "black";
-          ctx.imageSmoothingEnabled = false;
-
-          ctx.lineTo(point.x, point.y);
-          ctx.stroke();
-          setLastPoint(point);
-        }}
-        onPointerUp={(e) => {
-          if (isDrawing) {
-            setIsDrawing(false);
-            setLastPoint(null);
-
-            // 计算并累加笔画持续时间
-            if (currentStrokeStartTime) {
-              const strokeDuration = new Date() - currentStrokeStartTime;
-              setTotalStrokeDuration((prev) => prev + strokeDuration);
-              setCurrentStrokeStartTime(null);
+            // 记录首次落笔时间和延迟
+            if (!firstStrokeTime) {
+              const now = new Date();
+              setFirstStrokeTime(now);
+              // 直接计算并存储延迟（秒）
+              setFirstStrokeDelay(Math.floor((now - startTime) / 1000));
             }
 
-            saveState();
-          }
-          e.currentTarget.releasePointerCapture(e.pointerId);
-        }}
-        onPointerOut={(e) => {
-          if (isDrawing) {
-            setIsDrawing(false);
-            setLastPoint(null);
+            // 记录当前笔画开始时间
+            setCurrentStrokeStartTime(new Date());
 
-            // 计算并累加笔画持续时间
-            if (currentStrokeStartTime) {
-              const strokeDuration = new Date() - currentStrokeStartTime;
-              setTotalStrokeDuration((prev) => prev + strokeDuration);
-              setCurrentStrokeStartTime(null);
+            e.currentTarget.setPointerCapture(e.pointerId);
+
+            const ctx = contextRef.current;
+            ctx.beginPath();
+            ctx.moveTo(point.x, point.y);
+          }}
+          onPointerMove={(e) => {
+            if (!canDraw || !isDrawing || !lastPoint || !hasStartedDrawing)
+              return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const point = {
+              x: e.clientX - rect.left,
+              y: e.clientY - rect.top,
+              pressure: e.pressure || 1,
+            };
+
+            const ctx = contextRef.current;
+            const pressure = point.pressure;
+            ctx.globalAlpha = 1.0;
+            ctx.globalCompositeOperation = "source-over";
+            ctx.lineWidth = 3 * (pressure * 1.5); // 基于3的线宽进行压感调整
+            ctx.strokeStyle = "black";
+            ctx.fillStyle = "black";
+            ctx.imageSmoothingEnabled = false;
+
+            ctx.lineTo(point.x, point.y);
+            ctx.stroke();
+            setLastPoint(point);
+          }}
+          onPointerUp={(e) => {
+            if (isDrawing && hasStartedDrawing) {
+              setIsDrawing(false);
+              setLastPoint(null);
+
+              // 计算并累加笔画持续时间
+              if (currentStrokeStartTime) {
+                const strokeDuration = new Date() - currentStrokeStartTime;
+                setTotalStrokeDuration((prev) => prev + strokeDuration);
+                setCurrentStrokeStartTime(null);
+              }
+
+              saveState();
             }
+            e.currentTarget.releasePointerCapture(e.pointerId);
+          }}
+          onPointerOut={(e) => {
+            if (isDrawing && hasStartedDrawing) {
+              setIsDrawing(false);
+              setLastPoint(null);
 
-            saveState();
-          }
-          e.currentTarget.releasePointerCapture(e.pointerId);
-        }}
-        style={{ cursor: canDraw ? "crosshair" : "not-allowed" }}
-      />
+              // 计算并累加笔画持续时间
+              if (currentStrokeStartTime) {
+                const strokeDuration = new Date() - currentStrokeStartTime;
+                setTotalStrokeDuration((prev) => prev + strokeDuration);
+                setCurrentStrokeStartTime(null);
+              }
 
-      <ButtonGroup>
-        <Button
+              saveState();
+            }
+            e.currentTarget.releasePointerCapture(e.pointerId);
+          }}
+          style={{
+            cursor: canDraw && hasStartedDrawing ? "crosshair" : "not-allowed",
+          }}
+        />
+
+        {!hasStartedDrawing && showStartButton && (
+          <button
+            onClick={handleStartDrawingSession}
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 px-6 py-3 text-lg bg-green-600 hover:bg-green-700 text-white border-none rounded cursor-pointer select-none"
+          >
+            开始绘画
+          </button>
+        )}
+      </div>
+
+      <div className="flex gap-2.5 mb-5 select-none">
+        <button
           onClick={undo}
           disabled={
             !canDraw ||
@@ -623,10 +501,11 @@ function App() {
               .slice(0, historyIndex)
               .some((h) => h.challenge === currentChallenge)
           }
+          className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
         >
           撤销
-        </Button>
-        <Button
+        </button>
+        <button
           onClick={redo}
           disabled={
             !canDraw ||
@@ -634,45 +513,47 @@ function App() {
               .slice(historyIndex + 1)
               .some((h) => h.challenge === currentChallenge)
           }
+          className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
         >
           重做
-        </Button>
-        <Button onClick={finishDrawing} disabled={!canDraw}>
+        </button>
+        <button
+          onClick={finishDrawing}
+          disabled={!canDraw}
+          className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
+        >
           完成绘画
-        </Button>
-      </ButtonGroup>
+        </button>
+      </div>
 
       {isInputtingName && (
-        <div
-          style={{
-            marginTop: "20px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
+        <div className="mt-5 flex flex-col items-center gap-2.5">
           <input
             type="text"
             value={drawingName}
             onChange={(e) => setDrawingName(e.target.value)}
             placeholder="请输入画作名称（不超过8个字符）"
             maxLength={8}
-            style={{
-              padding: "8px",
-              fontSize: "16px",
-              width: "300px",
-            }}
+            className="p-2 text-base w-[300px]"
             autoFocus
             autoComplete="off"
           />
-          <Button onClick={submitDrawing}>提交并进入下一幅</Button>
+          <button
+            onClick={submitDrawing}
+            className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer select-none touch-manipulation"
+          >
+            提交并进入下一幅
+          </button>
         </div>
       )}
 
-      {showCountdown && <Countdown>{countdownValue}</Countdown>}
+      {showCountdown && (
+        <div className="text-4xl font-bold text-blue-500 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-5 rounded-lg z-50 select-none">
+          {countdownValue}
+        </div>
+      )}
 
-      <Stats>
+      <div className="mb-5 text-left w-full max-w-[600px] select-none">
         <p>
           当前题目: {currentChallenge + 1}/{challenges.length}
         </p>
@@ -686,12 +567,12 @@ function App() {
         {totalStrokeDuration > 0 && (
           <p>落笔总时长: {(totalStrokeDuration / 1000).toFixed(1)}秒</p>
         )}
-        {endTime && <p>结束时间: {endTime.toLocaleTimeString()}</p>}
-        {endTime && (
-          <p>总用时: {((endTime - startTime) / 1000).toFixed(1)}秒</p>
+        {endTime && startTime && (
+          <p>本次用时: {((endTime - startTime) / 1000).toFixed(1)}秒</p>
         )}
-      </Stats>
-    </Container>
+        <p>累计总用时: {totalUsedTime.toFixed(1)}秒</p>
+      </div>
+    </div>
   );
 }
 
