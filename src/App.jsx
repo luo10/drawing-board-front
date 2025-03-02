@@ -200,12 +200,18 @@ function App() {
   const [redoCount, setRedoCount] = useState(0);
   const [currentChallenge, setCurrentChallenge] = useState(0);
   const [drawingName, setDrawingName] = useState("");
-  const [timeLeft, setTimeLeft] = useState(600); // 10分钟
+  const [timeLeft, setTimeLeft] = useState(300); // 5分钟倒计时
   const [showCountdown, setShowCountdown] = useState(false);
   const [countdownValue, setCountdownValue] = useState(5);
   const [lastPoint, setLastPoint] = useState(null);
   const [isInputtingName, setIsInputtingName] = useState(false);
   const [canDraw, setCanDraw] = useState(true);
+  // 添加新的统计指标状态
+  const [firstStrokeTime, setFirstStrokeTime] = useState(null); // 第一笔开始时间
+  const [totalStrokeDuration, setTotalStrokeDuration] = useState(0); // 总绘画时间
+  const [currentStrokeStartTime, setCurrentStrokeStartTime] = useState(null); // 当前笔画开始时间
+  // 添加新的状态变量
+  const [firstStrokeDelay, setFirstStrokeDelay] = useState(null); // 首笔延迟（秒）
 
   const handleLogin = (data) => {
     setUser(data.data);
@@ -330,6 +336,12 @@ function App() {
         type: "image/png",
       });
 
+      // 计算绘画总时长（秒）
+      const totalDrawingTime = Math.floor((new Date() - startTime) / 1000);
+
+      // 计算首次落笔时间（相对于开始时间，单位秒）
+      const firstStrokeDelayValue = firstStrokeDelay || 0;
+
       // 创建FormData对象
       const formData = new FormData();
       formData.append("file", file);
@@ -337,10 +349,16 @@ function App() {
       formData.append("student_id", user.student_id);
       formData.append("subject_title", challenges[currentChallenge].title);
       formData.append("img_name", drawingName);
-      formData.append("used_time", Math.floor((new Date() - startTime) / 1000));
+      formData.append("used_time", totalDrawingTime);
       formData.append("drawn_strokes", strokeCount);
       formData.append("undo_count", undoCount);
       formData.append("redo_count", redoCount);
+      // 添加新的统计指标
+      formData.append("first_stroke_time", firstStrokeDelayValue);
+      formData.append(
+        "total_stroke_duration",
+        Math.floor(totalStrokeDuration / 1000)
+      );
 
       // 发送请求
       const response = await fetch(
@@ -362,6 +380,10 @@ function App() {
       setShowCountdown(true);
       setCountdownValue(5);
       setCanDraw(false); // 倒计时时禁止绘画
+      // 重置统计指标
+      setFirstStrokeTime(null);
+      setTotalStrokeDuration(0);
+      setFirstStrokeDelay(null);
     } catch (err) {
       alert(err.message || "提交失败，请稍后重试");
     }
@@ -421,6 +443,10 @@ function App() {
       setEndTime(null);
       setTimeLeft(300); // 重置时间为5分钟
       setCanDraw(true); // 允许绘画
+      // 重置绘画统计指标
+      setFirstStrokeTime(null);
+      setTotalStrokeDuration(0);
+      setCurrentStrokeStartTime(null);
 
       // 进入下一个挑战
       if (currentChallenge < challenges.length - 1) {
@@ -513,6 +539,18 @@ function App() {
           setLastPoint(point);
           setIsDrawing(true);
           setStrokeCount((prev) => prev + 1);
+
+          // 记录首次落笔时间和延迟
+          if (!firstStrokeTime) {
+            const now = new Date();
+            setFirstStrokeTime(now);
+            // 直接计算并存储延迟（秒）
+            setFirstStrokeDelay(Math.floor((now - startTime) / 1000));
+          }
+
+          // 记录当前笔画开始时间
+          setCurrentStrokeStartTime(new Date());
+
           e.currentTarget.setPointerCapture(e.pointerId);
 
           const ctx = contextRef.current;
@@ -545,6 +583,14 @@ function App() {
           if (isDrawing) {
             setIsDrawing(false);
             setLastPoint(null);
+
+            // 计算并累加笔画持续时间
+            if (currentStrokeStartTime) {
+              const strokeDuration = new Date() - currentStrokeStartTime;
+              setTotalStrokeDuration((prev) => prev + strokeDuration);
+              setCurrentStrokeStartTime(null);
+            }
+
             saveState();
           }
           e.currentTarget.releasePointerCapture(e.pointerId);
@@ -553,6 +599,14 @@ function App() {
           if (isDrawing) {
             setIsDrawing(false);
             setLastPoint(null);
+
+            // 计算并累加笔画持续时间
+            if (currentStrokeStartTime) {
+              const strokeDuration = new Date() - currentStrokeStartTime;
+              setTotalStrokeDuration((prev) => prev + strokeDuration);
+              setCurrentStrokeStartTime(null);
+            }
+
             saveState();
           }
           e.currentTarget.releasePointerCapture(e.pointerId);
@@ -626,6 +680,12 @@ function App() {
         <p>笔画数: {strokeCount}</p>
         <p>撤销次数: {undoCount}</p>
         <p>重做次数: {redoCount}</p>
+        {firstStrokeDelay !== null && (
+          <p>第一笔落笔时间: {firstStrokeDelay}秒</p>
+        )}
+        {totalStrokeDuration > 0 && (
+          <p>落笔总时长: {(totalStrokeDuration / 1000).toFixed(1)}秒</p>
+        )}
         {endTime && <p>结束时间: {endTime.toLocaleTimeString()}</p>}
         {endTime && (
           <p>总用时: {((endTime - startTime) / 1000).toFixed(1)}秒</p>
