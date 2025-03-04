@@ -37,6 +37,8 @@ function App() {
   const [showStartButton, setShowStartButton] = useState(false); // 添加控制开始绘画按钮显示的状态
   const [totalUsedTime, setTotalUsedTime] = useState(0); // 添加累计总用时状态
   const [strokesData, setStrokesData] = useState([]); // 记录每一笔的详细信息
+  // 添加一个新状态标记是否第一次进入绘画界面
+  const [isFirstEntry, setIsFirstEntry] = useState(true);
 
   const handleLogin = (data) => {
     setUser(data.data);
@@ -70,6 +72,11 @@ function App() {
 
   // 添加在其他处理函数附近
   const handleStartDrawingSession = () => {
+    // 如果是第一次进入绘画界面，标记已不再是第一次
+    if (isFirstEntry) {
+      setIsFirstEntry(false);
+    }
+
     setHasStartedDrawing(true);
     setStartTime(new Date());
     setCanDraw(true);
@@ -328,8 +335,13 @@ function App() {
         context.lineWidth = 3;
         saveState();
 
-        // 倒计时结束后显示开始按钮
-        setShowStartButton(true);
+        // 修改这里：如果不是第一次任务则自动开始绘画
+        if (!isFirstEntry) {
+          // 非第一次任务自动开始绘画
+          handleStartDrawingSession();
+        } else {
+          setShowStartButton(true);
+        }
       } else {
         alert("恭喜你完成了所有绘画挑战！");
       }
