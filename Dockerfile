@@ -1,5 +1,5 @@
 # 构建阶段
-FROM node:18-alpine as builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
@@ -25,13 +25,13 @@ COPY --from=builder /app/dist /usr/share/nginx/html/drawing-front
 RUN echo 'server { \
     listen 80; \
     location /drawing-front { \
-        alias /usr/share/nginx/html/drawing-front; \
-        try_files $uri $uri/ /drawing-front/index.html; \
-        # 开启 gzip \
-        gzip on; \
-        gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript; \
+    alias /usr/share/nginx/html/drawing-front; \
+    try_files $uri $uri/ /drawing-front/index.html; \
+    # 开启 gzip \
+    gzip on; \
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript; \
     } \
-}' > /etc/nginx/conf.d/default.conf
+    }' > /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

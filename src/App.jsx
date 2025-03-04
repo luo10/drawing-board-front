@@ -36,6 +36,7 @@ function App() {
   const [hasStartedDrawing, setHasStartedDrawing] = useState(false);
   const [showStartButton, setShowStartButton] = useState(false); // 添加控制开始绘画按钮显示的状态
   const [totalUsedTime, setTotalUsedTime] = useState(0); // 添加累计总用时状态
+  const [strokesData, setStrokesData] = useState([]); // 记录每一笔的详细信息
 
   const handleLogin = (data) => {
     setUser(data.data);
@@ -73,6 +74,7 @@ function App() {
     setStartTime(new Date());
     setCanDraw(true);
     setShowStartButton(false); // 点击开始后隐藏开始按钮
+    setStrokesData([]); // 初始化笔画数据
 
     // 开始绘画时绘制背景提示
     if (canvasRef.current && contextRef.current) {
@@ -208,6 +210,9 @@ function App() {
         "total_stroke_duration",
         Math.floor(totalStrokeDuration / 1000)
       );
+
+      // 添加详细的笔画数据
+      formData.append("strokes_data", JSON.stringify(strokesData));
 
       // 发送请求
       const response = await fetch(
@@ -362,6 +367,36 @@ function App() {
     };
   }, []);
 
+  // 将 handleStrokeEnd 函数移到这里，组件内部
+  const handleStrokeEnd = () => {
+    if (isDrawing && hasStartedDrawing) {
+      setIsDrawing(false);
+      setLastPoint(null);
+
+      const now = new Date();
+
+      // 更新当前笔画的结束时间和持续时间
+      setStrokesData((prev) => {
+        const updatedStrokes = [...prev];
+        if (updatedStrokes.length > 0) {
+          const currentStroke = updatedStrokes[updatedStrokes.length - 1];
+          currentStroke.endTime = now;
+          currentStroke.duration = now - currentStroke.startTime;
+        }
+        return updatedStrokes;
+      });
+
+      // 计算并累加笔画持续时间
+      if (currentStrokeStartTime) {
+        const strokeDuration = now - currentStrokeStartTime;
+        setTotalStrokeDuration((prev) => prev + strokeDuration);
+        setCurrentStrokeStartTime(null);
+      }
+
+      saveState();
+    }
+  };
+
   if (!user) {
     return <Login onLogin={handleLogin} />;
   }
@@ -405,16 +440,36 @@ function App() {
             setIsDrawing(true);
             setStrokeCount((prev) => prev + 1);
 
+            const now = new Date();
+
             // 记录首次落笔时间和延迟
             if (!firstStrokeTime) {
-              const now = new Date();
               setFirstStrokeTime(now);
               // 直接计算并存储延迟（秒）
               setFirstStrokeDelay(Math.floor((now - startTime) / 1000));
             }
 
-            // 记录当前笔画开始时间
-            setCurrentStrokeStartTime(new Date());
+            // 记录当前笔画的开始时间
+            setCurrentStrokeStartTime(now);
+
+            // 计算与上一笔的间隔时间
+            const lastStrokeEndTime =
+              strokesData.length > 0
+                ? strokesData[strokesData.length - 1].endTime
+                : startTime;
+            const interval = now - lastStrokeEndTime;
+
+            // 添加新的笔画记录
+            setStrokesData((prev) => [
+              ...prev,
+              {
+                index: strokeCount + 1,
+                startTime: now,
+                endTime: null,
+                duration: null,
+                interval: interval,
+              },
+            ]);
 
             e.currentTarget.setPointerCapture(e.pointerId);
 
@@ -446,35 +501,11 @@ function App() {
             setLastPoint(point);
           }}
           onPointerUp={(e) => {
-            if (isDrawing && hasStartedDrawing) {
-              setIsDrawing(false);
-              setLastPoint(null);
-
-              // 计算并累加笔画持续时间
-              if (currentStrokeStartTime) {
-                const strokeDuration = new Date() - currentStrokeStartTime;
-                setTotalStrokeDuration((prev) => prev + strokeDuration);
-                setCurrentStrokeStartTime(null);
-              }
-
-              saveState();
-            }
+            handleStrokeEnd();
             e.currentTarget.releasePointerCapture(e.pointerId);
           }}
           onPointerOut={(e) => {
-            if (isDrawing && hasStartedDrawing) {
-              setIsDrawing(false);
-              setLastPoint(null);
-
-              // 计算并累加笔画持续时间
-              if (currentStrokeStartTime) {
-                const strokeDuration = new Date() - currentStrokeStartTime;
-                setTotalStrokeDuration((prev) => prev + strokeDuration);
-                setCurrentStrokeStartTime(null);
-              }
-
-              saveState();
-            }
+            handleStrokeEnd();
             e.currentTarget.releasePointerCapture(e.pointerId);
           }}
           style={{
