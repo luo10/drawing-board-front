@@ -1,83 +1,75 @@
+function rds(degrees) {
+  return (degrees * Math.PI) / 180;
+}
+
+function drawBackground(ctx) {
+  ctx.strokeStyle = "#ddd";
+  // 绘制一个缺少左下角1/3部分的圆
+  ctx.beginPath();
+  // 圆的参数: 圆心(100,100), 半径50
+  // 从 45° (π/4) 开始，到 225° (5π/4) 结束，按顺时针方向绘制
+  ctx.arc(350, 150, 70, rds(-180 + 10), rds(70), false);
+  ctx.stroke();
+
+  const squareSize = 80;
+  const squareX = 230;
+  const squareY = 200;
+  const cornerLengthC = 15; // 每个角绘制的线段长度
+  const cornerLengthD = 50; // 每个角绘制的线段长度
+
+  // 绘制左上角
+  ctx.beginPath();
+  ctx.moveTo(squareX, squareY);
+  ctx.lineTo(squareX + cornerLengthC, squareY); // 水平线
+  ctx.moveTo(squareX, squareY);
+  ctx.lineTo(squareX, squareY + cornerLengthD); // 垂直线
+  ctx.stroke();
+
+  // 绘制右下角
+  ctx.beginPath();
+  ctx.moveTo(squareX + squareSize, squareY + squareSize);
+  ctx.lineTo(squareX + squareSize - cornerLengthD, squareY + squareSize); // 水平线
+  ctx.moveTo(squareX + squareSize, squareY + squareSize);
+  ctx.lineTo(squareX + squareSize, squareY + squareSize - cornerLengthC); // 垂直线
+  ctx.stroke();
+}
+
 export const challenges = [
   {
-    title: "画一只可爱的小猫",
-    drawBackground: (ctx) => {
-      ctx.strokeStyle = "#ddd";
-      ctx.beginPath();
-      ctx.ellipse(300, 200, 100, 70, 0, 0, 2 * Math.PI);
-      ctx.stroke();
-      // 画两个三角形ears
-      ctx.beginPath();
-      ctx.moveTo(220, 140);
-      ctx.lineTo(250, 100);
-      ctx.lineTo(280, 140);
-      ctx.moveTo(320, 140);
-      ctx.lineTo(350, 100);
-      ctx.lineTo(380, 140);
-      ctx.stroke();
-    },
+    title:
+      "请你将屏幕方框内的显示的线条及图形补全，使之成为有一定含义且有创意的图画。5分钟的时间内，你能想多少就画多少。",
+    tips: "完成后点击下方的完成绘画按钮",
+    drawBackground,
   },
   {
-    title: "画一朵美丽的花",
-    drawBackground: (ctx) => {
-      ctx.strokeStyle = "#ddd";
-      ctx.beginPath();
-      ctx.arc(300, 200, 50, 0, 2 * Math.PI);
-      ctx.moveTo(300, 250);
-      ctx.lineTo(300, 350);
-      ctx.stroke();
-    },
+    title:
+      "请你将屏幕方框内的显示的线条及图形补全，使之成为有一定含义且有创意的图画。5分钟的时间内，你能想多少就画多少。",
+    tips: "完成后点击下方的完成绘画按钮",
+    drawBackground,
   },
   {
-    title: "画一座山",
-    drawBackground: (ctx) => {
-      ctx.strokeStyle = "#ddd";
-      ctx.beginPath();
-      ctx.moveTo(100, 350);
-      ctx.lineTo(300, 100);
-      ctx.lineTo(500, 350);
-      ctx.stroke();
-    },
+    title:
+      "请你将屏幕方框内的显示的线条及图形补全，使之成为有一定含义且有创意的图画。5分钟的时间内，你能想多少就画多少。",
+    tips: "完成后点击下方的完成绘画按钮",
+    drawBackground,
   },
   {
-    title: "画一条小船",
-    drawBackground: (ctx) => {
-      ctx.strokeStyle = "#ddd";
-      ctx.beginPath();
-      ctx.moveTo(200, 250);
-      ctx.lineTo(400, 250);
-      ctx.lineTo(450, 300);
-      ctx.lineTo(150, 300);
-      ctx.closePath();
-      ctx.stroke();
-    },
+    title:
+      "请你将屏幕方框内的显示的线条及图形补全，使之成为有一定含义且有创意的图画。5分钟的时间内，你能想多少就画多少。",
+    tips: "完成后点击下方的完成绘画按钮",
+    drawBackground,
   },
   {
-    title: "画一棵大树",
-    drawBackground: (ctx) => {
-      ctx.strokeStyle = "#ddd";
-      ctx.beginPath();
-      ctx.moveTo(300, 350);
-      ctx.lineTo(300, 150);
-      ctx.moveTo(300, 150);
-      ctx.arc(300, 150, 80, 0, Math.PI, true);
-      ctx.stroke();
-    },
+    title:
+      "请你将屏幕方框内的显示的线条及图形补全，使之成为有一定含义且有创意的图画。5分钟的时间内，你能想多少就画多少。",
+    tips: "完成后点击下方的完成绘画按钮",
+    drawBackground,
   },
   {
-    title: "画一个房子",
-    drawBackground: (ctx) => {
-      ctx.strokeStyle = "#ddd";
-      ctx.beginPath();
-      ctx.moveTo(200, 250);
-      ctx.lineTo(400, 250);
-      ctx.lineTo(400, 350);
-      ctx.lineTo(200, 350);
-      ctx.closePath();
-      ctx.moveTo(200, 250);
-      ctx.lineTo(300, 150);
-      ctx.lineTo(400, 250);
-      ctx.stroke();
-    },
+    title:
+      "请你将屏幕方框内的显示的线条及图形补全，使之成为有一定含义且有创意的图画。5分钟的时间内，你能想多少就画多少。",
+    tips: "完成后点击下方的完成绘画按钮",
+    drawBackground,
   },
+  ,
 ];

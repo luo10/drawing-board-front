@@ -45,6 +45,7 @@ function App() {
     setShowInstructions(true); // 登录后显示注意事项
   };
 
+  // 处理开始绘画逻辑
   const handleStartDrawing = async () => {
     try {
       const response = await fetch(
@@ -64,18 +65,16 @@ function App() {
 
       setShowInstructions(false);
       setShowDrawingBoard(true);
-      setShowStartButton(true); // 第一次进入绘画界面时显示开始按钮
+      setShowStartButton(true); // 显示开始绘画按钮
     } catch (err) {
       alert(err.message || "生成题目失败，请稍后重试");
     }
   };
 
-  // 添加在其他处理函数附近
+  // 处理开始绘画会话
   const handleStartDrawingSession = () => {
-    // 如果是第一次进入绘画界面，标记已不再是第一次
-    if (isFirstEntry) {
-      setIsFirstEntry(false);
-    }
+    // 点击开始按钮后，标记不再是第一次
+    setIsFirstEntry(false);
 
     setHasStartedDrawing(true);
     setStartTime(new Date());
@@ -297,22 +296,22 @@ function App() {
       return () => clearInterval(timer);
     } else if (showCountdown && countdownValue === 0) {
       setShowCountdown(false);
-      // 倒计时结束后再进入下一题
-      // 清空画布状态
+      // 重置绘画状态
       setHistory([]);
       setHistoryIndex(-1);
       setStrokeCount(0);
       setUndoCount(0);
       setRedoCount(0);
       setTimeLeft(300); // 重置时间为5分钟
-      setCanDraw(false); // 初始不允许绘画，等点击开始按钮后才允许
+      setCanDraw(false); // 初始不允许绘画
       setHasStartedDrawing(false); // 重置开始绘画状态
-      // 重置绘画统计指标
+
+      // 重置统计指标
       setFirstStrokeTime(null);
       setTotalStrokeDuration(0);
       setCurrentStrokeStartTime(null);
-      setStartTime(null); // 重置每张图的开始时间
-      setEndTime(null); // 重置每张图的结束时间
+      setStartTime(null);
+      setEndTime(null);
 
       // 如果已经完成所有挑战，重置总用时
       if (currentChallenge >= challenges.length - 1) {
@@ -322,25 +321,27 @@ function App() {
       // 进入下一个挑战
       if (currentChallenge < challenges.length - 1) {
         setCurrentChallenge((prev) => prev + 1);
+
         // 重新初始化画布
         const canvas = canvasRef.current;
         const context = contextRef.current;
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = "white";
         context.fillRect(0, 0, canvas.width, canvas.height);
-        context.globalAlpha = 1.0; // 设置完全不透明
+        context.globalAlpha = 1.0;
         context.globalCompositeOperation = "source-over";
         context.strokeStyle = "black";
         context.fillStyle = "black";
         context.lineWidth = 3;
         saveState();
 
-        // 修改这里：如果不是第一次任务则自动开始绘画
-        if (!isFirstEntry) {
-          // 非第一次任务自动开始绘画
-          handleStartDrawingSession();
-        } else {
+        // 关键修改：检查是否是第一次绘画
+        if (isFirstEntry) {
+          // 如果是第一次，显示开始按钮
           setShowStartButton(true);
+        } else {
+          // 不是第一次，自动开始绘画
+          handleStartDrawingSession();
         }
       } else {
         alert("恭喜你完成了所有绘画挑战！");
@@ -429,10 +430,16 @@ function App() {
       <div className="mb-5 text-right p-2.5 bg-gray-100 rounded text-sm text-gray-600 select-none">
         欢迎你，{user.username} (学号: {user.student_id})
       </div>
-      <div className="mb-5 text-2xl font-bold text-gray-800 select-none">
-        {challenges[currentChallenge].title}
+      <div className="w-[600px] mb-5 text-2xl font-bold text-gray-800 select-none">
+        <span>{challenges[currentChallenge].title}</span>
+        <span class="text-red-400">
+          {showStartButton
+            ? "准备好了就请点击【开始绘画】吧"
+            : challenges[currentChallenge].tips}
+        </span>
       </div>
-      <div>
+
+      <div class="mb-5">
         剩余时间: {Math.floor(timeLeft / 60)}:
         {(timeLeft % 60).toString().padStart(2, "0")}
       </div>
@@ -503,7 +510,8 @@ function App() {
             const pressure = point.pressure;
             ctx.globalAlpha = 1.0;
             ctx.globalCompositeOperation = "source-over";
-            ctx.lineWidth = 3 * (pressure * 1.5); // 基于3的线宽进行压感调整
+            // ctx.lineWidth = 3 * (pressure * 1.5); // 基于3的线宽进行压感调整
+            ctx.lineWidth = 3;
             ctx.strokeStyle = "black";
             ctx.fillStyle = "black";
             ctx.imageSmoothingEnabled = false;
@@ -528,7 +536,7 @@ function App() {
         {!hasStartedDrawing && showStartButton && (
           <button
             onClick={handleStartDrawingSession}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 px-6 py-3 text-lg bg-green-600 hover:bg-green-700 text-white border-none rounded cursor-pointer select-none"
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 px-6 py-3 text-lg bg-blue-500 hover:bg-blue-600 text-white border-none rounded-full cursor-pointer select-none touch-manipulation"
           >
             开始绘画
           </button>
@@ -596,7 +604,7 @@ function App() {
         </div>
       )}
 
-      <div className="mb-5 text-left w-full max-w-[600px] select-none">
+      {/* <div className="mb-5 text-left w-full max-w-[600px] select-none">
         <p>
           当前题目: {currentChallenge + 1}/{challenges.length}
         </p>
@@ -614,7 +622,7 @@ function App() {
           <p>本次用时: {((endTime - startTime) / 1000).toFixed(1)}秒</p>
         )}
         <p>累计总用时: {totalUsedTime.toFixed(1)}秒</p>
-      </div>
+      </div> */}
     </div>
   );
 }
