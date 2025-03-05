@@ -335,7 +335,7 @@ function App() {
       }
 
       // 保存初始状态
-      saveState();
+      // saveState();
     }
   }, [showDrawingBoard, currentChallenge, hasStartedDrawing]);
 
