@@ -83,15 +83,6 @@ function App() {
     setCanDraw(true);
     setShowStartButton(false); // 点击开始后隐藏开始按钮
     setStrokesData([]); // 初始化笔画数据
-
-    // 开始绘画时绘制背景提示
-    if (canvasRef.current && contextRef.current) {
-      const context = contextRef.current;
-      if (challenges[currentChallenge].drawBackground) {
-        challenges[currentChallenge].drawBackground(context);
-      }
-      saveState(); // 保存带有背景提示的初始状态
-    }
   };
 
   // 保存画布状态
@@ -332,10 +323,8 @@ function App() {
       // 只有在已经开始绘画的状态下才绘制背景提示
       if (hasStartedDrawing && challenges[currentChallenge].drawBackground) {
         challenges[currentChallenge].drawBackground(context);
+        saveState();
       }
-
-      // 保存初始状态
-      // saveState();
     }
   }, [showDrawingBoard, currentChallenge, hasStartedDrawing]);
 
