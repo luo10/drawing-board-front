@@ -26,7 +26,7 @@ function App() {
   const [countdownValue, setCountdownValue] = useState(5);
   const [lastPoint, setLastPoint] = useState(null);
   const [isInputtingName, setIsInputtingName] = useState(false);
-  const [canDraw, setCanDraw] = useState(true);
+  const [canDraw, setCanDraw] = useState(false); // 改为默认false，只有点击开始绘画后才能绘画
   // 添加新的统计指标状态
   const [firstStrokeTime, setFirstStrokeTime] = useState(null); // 第一笔开始时间
   const [totalStrokeDuration, setTotalStrokeDuration] = useState(0); // 总绘画时间
@@ -431,9 +431,15 @@ function App() {
         欢迎你，{user.username} (学号: {user.student_id})
       </div>
       <div className="w-[600px] mb-5 text-2xl font-bold text-gray-800 select-none">
-        <span>{challenges[currentChallenge].title}</span>
+        <span>
+          {isInputtingName
+            ? "现在，请你为这幅画简单命名，告诉我你画的是什么。"
+            : challenges[currentChallenge].title}
+        </span>
         <span class="text-red-400">
-          {showStartButton
+          {isInputtingName
+            ? "确认后点击【提交，进入下一幅】"
+            : showStartButton
             ? "准备好了就请点击【开始绘画】吧"
             : challenges[currentChallenge].tips}
         </span>
@@ -543,39 +549,42 @@ function App() {
         )}
       </div>
 
-      <div className="flex gap-2.5 mb-5 select-none">
-        <button
-          onClick={undo}
-          disabled={
-            !canDraw ||
-            !history
-              .slice(0, historyIndex)
-              .some((h) => h.challenge === currentChallenge)
-          }
-          className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
-        >
-          撤销
-        </button>
-        <button
-          onClick={redo}
-          disabled={
-            !canDraw ||
-            !history
-              .slice(historyIndex + 1)
-              .some((h) => h.challenge === currentChallenge)
-          }
-          className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
-        >
-          重做
-        </button>
-        <button
-          onClick={finishDrawing}
-          disabled={!canDraw}
-          className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
-        >
-          完成绘画
-        </button>
-      </div>
+      {/* 只有在非命名阶段才显示这些按钮 */}
+      {!isInputtingName && (
+        <div className="flex gap-2.5 mb-5 select-none">
+          <button
+            onClick={undo}
+            disabled={
+              !canDraw ||
+              !history
+                .slice(0, historyIndex)
+                .some((h) => h.challenge === currentChallenge)
+            }
+            className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
+          >
+            撤销
+          </button>
+          <button
+            onClick={redo}
+            disabled={
+              !canDraw ||
+              !history
+                .slice(historyIndex + 1)
+                .some((h) => h.challenge === currentChallenge)
+            }
+            className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
+          >
+            重做
+          </button>
+          <button
+            onClick={finishDrawing}
+            disabled={!canDraw}
+            className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
+          >
+            完成绘画
+          </button>
+        </div>
+      )}
 
       {isInputtingName && (
         <div className="mt-5 flex flex-col items-center gap-2.5">
@@ -585,7 +594,7 @@ function App() {
             onChange={(e) => setDrawingName(e.target.value)}
             placeholder="请输入画作名称（不超过8个字符）"
             maxLength={8}
-            className="p-2 text-base w-[300px]"
+            className="p-2 text-base w-[300px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             autoFocus
             autoComplete="off"
           />
@@ -593,7 +602,7 @@ function App() {
             onClick={submitDrawing}
             className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer select-none touch-manipulation"
           >
-            提交并进入下一幅
+            提交, 进入下一幅
           </button>
         </div>
       )}
