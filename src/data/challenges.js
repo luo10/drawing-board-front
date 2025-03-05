@@ -71,5 +71,4 @@ export const challenges = [
     tips: "尽量与之前的绘图任务不重复, 完成后点击下方的完成绘画按钮",
     drawBackground,
   },
-  ,
 ];

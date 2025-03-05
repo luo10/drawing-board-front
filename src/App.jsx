@@ -39,6 +39,8 @@ function App() {
   const [strokesData, setStrokesData] = useState([]); // 记录每一笔的详细信息
   // 添加一个新状态标记是否第一次进入绘画界面
   const [isFirstEntry, setIsFirstEntry] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false); // 添加完成状态
+  const [surveyUrl, setSurveyUrl] = useState(""); // 将来用于问卷链接
 
   const handleLogin = (data) => {
     setUser(data.data);
@@ -176,30 +178,49 @@ function App() {
 
   // 提交绘画
   const submitDrawing = async () => {
-    if (drawingName.length === 0) {
-      alert("请输入画作名称！");
-      return;
-    }
-    if (drawingName.length > 8) {
-      alert("画作名称不能超过8个字符！");
-      return;
-    }
+    // 1. 验证画作名称
+    if (!validateDrawingName()) return;
 
     try {
-      // 获取画布数据并转换为blob
+      // 2. 准备绘画数据
+      const file = await prepareDrawingFile();
+      const formData = createFormData(file);
+
+      // 3. 发送请求并处理响应
+      await sendDrawingData(formData);
+
+      // 4. 处理后续流程
+      handleSubmissionSuccess();
+    } catch (err) {
+      // 5. 错误处理
+      handleSubmissionError(err);
+    }
+
+    // 内部辅助函数
+    function validateDrawingName() {
+      if (drawingName.length === 0) {
+        alert("请输入画作名称！");
+        return false;
+      }
+      if (drawingName.length > 8) {
+        alert("画作名称不能超过8个字符！");
+        return false;
+      }
+      return true;
+    }
+
+    async function prepareDrawingFile() {
       const canvas = canvasRef.current;
       const blob = await new Promise((resolve) => canvas.toBlob(resolve));
-      const file = new File([blob], `${drawingName}.png`, {
-        type: "image/png",
-      });
+      return new File([blob], `${drawingName}.png`, { type: "image/png" });
+    }
 
-      // 计算绘画总时长（秒）
+    function createFormData(file) {
+      // 计算相关统计数据
       const totalDrawingTime = Math.floor(totalUsedTime);
-
-      // 计算首次落笔时间（相对于开始时间，单位秒）
       const firstStrokeDelayValue = firstStrokeDelay || 0;
 
-      // 创建FormData对象
+      // 创建并填充FormData
       const formData = new FormData();
       formData.append("file", file);
       formData.append("exam_id", user.exam_id);
@@ -210,17 +231,17 @@ function App() {
       formData.append("drawn_strokes", strokeCount);
       formData.append("undo_count", undoCount);
       formData.append("redo_count", redoCount);
-      // 添加新的统计指标
       formData.append("first_stroke_time", firstStrokeDelayValue);
       formData.append(
         "total_stroke_duration",
         Math.floor(totalStrokeDuration / 1000)
       );
-
-      // 添加详细的笔画数据
       formData.append("strokes_data", JSON.stringify(strokesData));
 
-      // 发送请求
+      return formData;
+    }
+
+    async function sendDrawingData(formData) {
       const response = await fetch(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPLOAD_SUBJECT}`,
         {
@@ -234,22 +255,54 @@ function App() {
         throw new Error(data.message || "提交失败");
       }
 
-      // 重置状态
+      return data;
+    }
+
+    function handleSubmissionSuccess() {
+      // 检查是否是最后一个挑战
+      if (currentChallenge >= challenges.length - 1) {
+        // 最后一个挑战完成，显示结束页面
+        setTotalUsedTime(0);
+        setIsCompleted(true);
+        resetDrawingState();
+      } else {
+        // 准备下一个挑战
+        prepareNextChallenge();
+      }
+    }
+
+    function resetDrawingState() {
       setIsInputtingName(false);
       setDrawingName("");
-      setShowCountdown(true);
-      setCountdownValue(5);
-      setCanDraw(false); // 倒计时时禁止绘画
-      setHasStartedDrawing(false); // 重置开始绘画状态
-      // 不重置总用时，因为需要累计
-      // 重置其他统计指标
+      setShowCountdown(false);
+      setCanDraw(false);
+      setHasStartedDrawing(false);
       setFirstStrokeTime(null);
       setTotalStrokeDuration(0);
       setFirstStrokeDelay(null);
       setStartTime(null);
       setEndTime(null);
-    } catch (err) {
-      alert(err.message || "提交失败，请稍后重试");
+    }
+
+    function prepareNextChallenge() {
+      setIsInputtingName(false);
+      setDrawingName("");
+      setShowCountdown(true);
+      setCountdownValue(5);
+      setCanDraw(false);
+      setHasStartedDrawing(false);
+      // 只重置部分状态，保留总用时
+      setFirstStrokeTime(null);
+      setTotalStrokeDuration(0);
+      setFirstStrokeDelay(null);
+      setStartTime(null);
+      setEndTime(null);
+    }
+
+    function handleSubmissionError(err) {
+      const errorMessage = err.message || "提交失败，请稍后重试";
+      console.error("提交绘画失败:", errorMessage);
+      alert(errorMessage);
     }
   };
 
@@ -316,6 +369,7 @@ function App() {
       // 如果已经完成所有挑战，重置总用时
       if (currentChallenge >= challenges.length - 1) {
         setTotalUsedTime(0);
+        setIsCompleted(true); // 标记为已完成所有任务
       }
 
       // 进入下一个挑战
@@ -343,8 +397,6 @@ function App() {
           // 不是第一次，自动开始绘画
           handleStartDrawingSession();
         }
-      } else {
-        alert("恭喜你完成了所有绘画挑战！");
       }
     }
   }, [showCountdown, countdownValue]);
@@ -410,6 +462,24 @@ function App() {
     }
   };
 
+  // 处理关闭页面的函数
+  const handleClosePage = () => {
+    window.close(); // 尝试关闭窗口
+    // 如果window.close()不起作用（这在某些浏览器中会被阻止），提示用户
+    setTimeout(() => {
+      alert("请手动关闭此页面。感谢您的参与！");
+    }, 300);
+  };
+
+  // 如果存在问卷链接，跳转到问卷
+  const handleSurvey = () => {
+    if (surveyUrl) {
+      window.location.href = surveyUrl;
+    } else {
+      alert("问卷链接暂未设置，请稍后再试。");
+    }
+  };
+
   if (!user) {
     return <Login onLogin={handleLogin} />;
   }
@@ -421,6 +491,43 @@ function App() {
           欢迎你，{user.username} (学号: {user.student_id})
         </div>
         <Instructions onStart={handleStartDrawing} />
+      </div>
+    );
+  }
+
+  // 添加完成页面
+  if (isCompleted) {
+    return (
+      <div className="flex flex-col items-center p-5 select-none">
+        <div className="mb-5 text-right p-2.5 bg-gray-100 rounded text-sm text-gray-600 select-none">
+          欢迎你，{user.username} (学号: {user.student_id})
+        </div>
+        <div className="w-[600px] mb-10 text-center">
+          <h2 className="text-3xl font-bold text-green-600 mb-8">
+            恭喜你完成了所有绘画挑战！
+          </h2>
+          <p className="text-xl mb-10">
+            感谢你的参与和创作，你的每一幅作品都很有价值。
+          </p>
+
+          <div className="flex justify-center gap-5">
+            {surveyUrl ? (
+              <button
+                onClick={handleSurvey}
+                className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md"
+              >
+                前往问卷调查
+              </button>
+            ) : (
+              <button
+                onClick={handleClosePage}
+                className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md"
+              >
+                关闭页面
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
