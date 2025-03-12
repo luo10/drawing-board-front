@@ -216,7 +216,7 @@ function App() {
       formData.append("file", file);
       formData.append("exam_id", user.exam_id);
       formData.append("student_id", user.student_id);
-      formData.append("subject_title", challenges[currentChallenge].title);
+      formData.append("subject_title", currentChallenge + 1);
       formData.append("img_name", drawingName);
       formData.append("used_time", totalDrawingTime);
       formData.append("drawn_strokes", strokeCount);
@@ -698,7 +698,9 @@ function App() {
             onClick={submitDrawing}
             className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer select-none touch-manipulation"
           >
-            提交, 进入下一幅
+            {currentChallenge >= challenges.length - 1
+              ? "提交，进入下一环节"
+              : "提交, 进入下一幅"}
           </button>
         </div>
       )}
