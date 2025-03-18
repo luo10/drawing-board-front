@@ -695,202 +695,270 @@ function App() {
       <div className="mb-5 text-right p-2.5 bg-gray-100 rounded text-sm text-gray-600 select-none">
         欢迎你，{user.username} (学号: {user.student_id})
       </div>
-      <div className="w-[500px] mb-5 text-2xl font-bold text-gray-800 select-none">
-        <span>
-          {isInputtingName ? (
-            "请为你的画作命名"
-          ) : (
-            <>
-              【{currentChallenge + 1}/{challenges.length}】
+
+      {/* 整合标题、画板、操作按钮和倒计时的卡片 */}
+      <div className="bg-white rounded-xl shadow-md border border-gray-100 p-5 mb-5">
+        {/* 标题部分 */}
+        {isInputtingName ? (
+          <div className="text-center mb-5">
+            <svg
+              className="h-8 w-8 mx-auto mb-2 text-blue-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+            <h2 className="text-2xl font-bold text-gray-800">
+              请为你的画作命名
+            </h2>
+          </div>
+        ) : (
+          <div className="mb-5">
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center">
+                <svg
+                  className="h-6 w-6 text-blue-600 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                  />
+                </svg>
+                <h2 className="text-2xl font-bold text-gray-800">绘画挑战</h2>
+              </div>
+              <div className="flex items-center space-x-3">
+                {/* 剩余时间显示 */}
+                {!isInputtingName && (
+                  <div className="flex items-center justify-center px-3 py-1.5 bg-blue-50 rounded-lg">
+                    <svg
+                      className="h-5 w-5 text-blue-600 mr-1.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <div className="flex items-center text-blue-700 font-mono font-bold">
+                      <span>{Math.floor(timeLeft / 60)}</span>
+                      <span
+                        className={`mx-0.5 ${
+                          timeLeft % 2 === 0 ? "opacity-50" : "opacity-100"
+                        } transition-opacity duration-500`}
+                      >
+                        :
+                      </span>
+                      <span>{(timeLeft % 60).toString().padStart(2, "0")}</span>
+                    </div>
+                  </div>
+                )}
+                <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
+                  {currentChallenge + 1}/{challenges.length}
+                </span>
+              </div>
+            </div>
+            <div className="border-b border-gray-100 mb-3"></div>
+            <h3 className="text-xl font-bold text-gray-700 mb-2">
               {challenges[currentChallenge].title}
-            </>
+            </h3>
+            <p
+              className={`text-base ${
+                showStartButton ? "text-blue-600 font-semibold" : "text-red-500"
+              }`}
+            >
+              {showStartButton
+                ? "准备好了就请点击【开始绘画】吧"
+                : challenges[currentChallenge].tips}
+            </p>
+          </div>
+        )}
+
+        {/* 画板部分 */}
+        <div className="relative">
+          <canvas
+            ref={canvasRef}
+            className="border border-gray-300 mb-3 touch-none select-none bg-white mx-auto"
+            onPointerDown={(e) => {
+              if (!canDraw || !hasStartedDrawing) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const point = {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top,
+                pressure: e.pressure || 1,
+              };
+              setLastPoint(point);
+              setIsDrawing(true);
+              setStrokeCount((prev) => prev + 1);
+
+              const now = new Date();
+
+              // 记录首次落笔时间和延迟
+              if (!firstStrokeTime) {
+                setFirstStrokeTime(now);
+                // 直接计算并存储延迟（秒）
+                setFirstStrokeDelay(Math.floor((now - startTime) / 1000));
+              }
+
+              // 记录当前笔画的开始时间
+              setCurrentStrokeStartTime(now);
+
+              // 计算与上一笔的间隔时间
+              const lastStrokeEndTime =
+                strokesData.length > 0
+                  ? strokesData[strokesData.length - 1].endTime
+                  : startTime;
+              const interval = now - lastStrokeEndTime;
+
+              // 添加新的笔画记录
+              setStrokesData((prev) => [
+                ...prev,
+                {
+                  index: strokeCount + 1,
+                  startTime: now,
+                  endTime: null,
+                  duration: null,
+                  interval: interval,
+                },
+              ]);
+
+              e.currentTarget.setPointerCapture(e.pointerId);
+
+              const ctx = contextRef.current;
+              ctx.beginPath();
+              ctx.moveTo(point.x, point.y);
+            }}
+            onPointerMove={(e) => {
+              if (!canDraw || !isDrawing || !lastPoint || !hasStartedDrawing)
+                return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const point = {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top,
+                pressure: e.pressure || 1,
+              };
+
+              const ctx = contextRef.current;
+              const pressure = point.pressure;
+              ctx.globalAlpha = 1.0;
+              ctx.globalCompositeOperation = "source-over";
+              // ctx.lineWidth = 3 * (pressure * 1.5); // 基于3的线宽进行压感调整
+              ctx.lineWidth = 3;
+              ctx.strokeStyle = "black";
+              ctx.fillStyle = "black";
+              ctx.imageSmoothingEnabled = false;
+
+              ctx.lineTo(point.x, point.y);
+              ctx.stroke();
+              setLastPoint(point);
+            }}
+            onPointerUp={(e) => {
+              handleStrokeEnd();
+              e.currentTarget.releasePointerCapture(e.pointerId);
+            }}
+            onPointerOut={(e) => {
+              handleStrokeEnd();
+              e.currentTarget.releasePointerCapture(e.pointerId);
+            }}
+            style={{
+              cursor:
+                canDraw && hasStartedDrawing ? "crosshair" : "not-allowed",
+            }}
+          />
+
+          {!hasStartedDrawing && showStartButton && (
+            <button
+              onClick={handleStartDrawingSession}
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 px-6 py-3 text-lg bg-blue-600 hover:bg-blue-700 text-white border-none rounded-full cursor-pointer select-none touch-manipulation"
+            >
+              开始绘画
+            </button>
           )}
-        </span>
-        <span className="text-red-400">
-          {isInputtingName
-            ? ""
-            : showStartButton
-            ? "准备好了就请点击【开始绘画】吧"
-            : challenges[currentChallenge].tips}
-        </span>
-      </div>
-
-      {/* 只在非命名阶段显示倒计时 */}
-      {!isInputtingName && (
-        <div className="mb-5">
-          剩余时间: {Math.floor(timeLeft / 60)}:
-          {(timeLeft % 60).toString().padStart(2, "0")}
         </div>
-      )}
 
-      <div className="relative">
-        <canvas
-          ref={canvasRef}
-          className="border border-gray-300 mb-5 touch-none select-none bg-white"
-          onPointerDown={(e) => {
-            if (!canDraw || !hasStartedDrawing) return;
-            const rect = e.currentTarget.getBoundingClientRect();
-            const point = {
-              x: e.clientX - rect.left,
-              y: e.clientY - rect.top,
-              pressure: e.pressure || 1,
-            };
-            setLastPoint(point);
-            setIsDrawing(true);
-            setStrokeCount((prev) => prev + 1);
-
-            const now = new Date();
-
-            // 记录首次落笔时间和延迟
-            if (!firstStrokeTime) {
-              setFirstStrokeTime(now);
-              // 直接计算并存储延迟（秒）
-              setFirstStrokeDelay(Math.floor((now - startTime) / 1000));
-            }
-
-            // 记录当前笔画的开始时间
-            setCurrentStrokeStartTime(now);
-
-            // 计算与上一笔的间隔时间
-            const lastStrokeEndTime =
-              strokesData.length > 0
-                ? strokesData[strokesData.length - 1].endTime
-                : startTime;
-            const interval = now - lastStrokeEndTime;
-
-            // 添加新的笔画记录
-            setStrokesData((prev) => [
-              ...prev,
-              {
-                index: strokeCount + 1,
-                startTime: now,
-                endTime: null,
-                duration: null,
-                interval: interval,
-              },
-            ]);
-
-            e.currentTarget.setPointerCapture(e.pointerId);
-
-            const ctx = contextRef.current;
-            ctx.beginPath();
-            ctx.moveTo(point.x, point.y);
-          }}
-          onPointerMove={(e) => {
-            if (!canDraw || !isDrawing || !lastPoint || !hasStartedDrawing)
-              return;
-            const rect = e.currentTarget.getBoundingClientRect();
-            const point = {
-              x: e.clientX - rect.left,
-              y: e.clientY - rect.top,
-              pressure: e.pressure || 1,
-            };
-
-            const ctx = contextRef.current;
-            const pressure = point.pressure;
-            ctx.globalAlpha = 1.0;
-            ctx.globalCompositeOperation = "source-over";
-            // ctx.lineWidth = 3 * (pressure * 1.5); // 基于3的线宽进行压感调整
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = "black";
-            ctx.fillStyle = "black";
-            ctx.imageSmoothingEnabled = false;
-
-            ctx.lineTo(point.x, point.y);
-            ctx.stroke();
-            setLastPoint(point);
-          }}
-          onPointerUp={(e) => {
-            handleStrokeEnd();
-            e.currentTarget.releasePointerCapture(e.pointerId);
-          }}
-          onPointerOut={(e) => {
-            handleStrokeEnd();
-            e.currentTarget.releasePointerCapture(e.pointerId);
-          }}
-          style={{
-            cursor: canDraw && hasStartedDrawing ? "crosshair" : "not-allowed",
-          }}
-        />
-
-        {!hasStartedDrawing && showStartButton && (
-          <button
-            onClick={handleStartDrawingSession}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 px-6 py-3 text-lg bg-blue-500 hover:bg-blue-600 text-white border-none rounded-full cursor-pointer select-none touch-manipulation"
-          >
-            开始绘画
-          </button>
+        {/* 操作按钮组 */}
+        {!isInputtingName && (
+          <div className="flex justify-center gap-3 mt-1">
+            <button
+              onClick={undo}
+              disabled={
+                !canDraw ||
+                !history
+                  .slice(0, historyIndex)
+                  .some((h) => h.challenge === currentChallenge)
+              }
+              className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
+            >
+              <span className="flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                撤销
+              </span>
+            </button>
+            <button
+              onClick={redo}
+              disabled={
+                !canDraw ||
+                !history
+                  .slice(historyIndex + 1)
+                  .some((h) => h.challenge === currentChallenge)
+              }
+              className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
+            >
+              <span className="flex items-center">
+                恢复
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 ml-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
+                </svg>
+              </span>
+            </button>
+            <button
+              onClick={finishDrawing}
+              disabled={!canDraw || strokeCount === 0}
+              className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
+            >
+              完成绘画
+            </button>
+          </div>
         )}
       </div>
-
-      {/* 只有在非命名阶段才显示这些按钮 */}
-      {!isInputtingName && (
-        <div className="flex gap-2.5 mb-5 select-none">
-          <button
-            onClick={undo}
-            disabled={
-              !canDraw ||
-              !history
-                .slice(0, historyIndex)
-                .some((h) => h.challenge === currentChallenge)
-            }
-            className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
-          >
-            <span className="flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
-              撤销
-            </span>
-          </button>
-          <button
-            onClick={redo}
-            disabled={
-              !canDraw ||
-              !history
-                .slice(historyIndex + 1)
-                .some((h) => h.challenge === currentChallenge)
-            }
-            className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
-          >
-            <span className="flex items-center">
-              恢复
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 ml-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M14 5l7 7m0 0l-7 7m7-7H3"
-                />
-              </svg>
-            </span>
-          </button>
-          <button
-            onClick={finishDrawing}
-            disabled={!canDraw || strokeCount === 0}
-            className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
-          >
-            完成绘画
-          </button>
-        </div>
-      )}
 
       {/* 倒计时弹窗 */}
       {showCountdown && (
