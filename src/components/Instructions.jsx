@@ -16,16 +16,16 @@ function Instructions({ onStart }) {
   }, [countdown]);
 
   return (
-    <div className="flex flex-col items-center justify-center p-8">
-      <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-4xl border border-gray-100 transform transition-all duration-300 hover:shadow-2xl">
-        <h1 className="text-center text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-10">
+    <div className="flex flex-col items-center justify-center  sm:p-8">
+      <div className="bg-white p-5 sm:p-10 rounded-2xl shadow-xl w-full max-w-4xl border border-gray-100 transform transition-all duration-300 hover:shadow-2xl">
+        <h1 className="text-center text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-5 sm:mb-10">
           实验须知
         </h1>
 
-        <ul className="mb-10 space-y-6 text-base leading-relaxed text-gray-700">
+        <ul className="mb-6 sm:mb-10 space-y-4 sm:space-y-6 text-sm sm:text-base leading-relaxed text-gray-700">
           <li className="flex items-start">
             <svg
-              className="h-6 w-6 text-blue-500 mr-2 flex-shrink-0"
+              className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 mr-2 flex-shrink-0 mt-0.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -42,7 +42,7 @@ function Instructions({ onStart }) {
 
           <li className="flex items-start">
             <svg
-              className="h-6 w-6 text-blue-500 mr-2 flex-shrink-0"
+              className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 mr-2 flex-shrink-0 mt-0.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -61,7 +61,7 @@ function Instructions({ onStart }) {
 
           <li className="flex items-start">
             <svg
-              className="h-6 w-6 text-blue-500 mr-2 flex-shrink-0"
+              className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 mr-2 flex-shrink-0 mt-0.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -80,7 +80,7 @@ function Instructions({ onStart }) {
 
           <li className="flex items-start">
             <svg
-              className="h-6 w-6 text-blue-500 mr-2 flex-shrink-0"
+              className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 mr-2 flex-shrink-0 mt-0.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -99,7 +99,7 @@ function Instructions({ onStart }) {
 
           <li className="flex items-start">
             <svg
-              className="h-6 w-6 text-blue-500 mr-2 flex-shrink-0"
+              className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 mr-2 flex-shrink-0 mt-0.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -118,7 +118,7 @@ function Instructions({ onStart }) {
 
           <li className="flex items-start">
             <svg
-              className="h-6 w-6 text-red-500 mr-2 flex-shrink-0"
+              className="h-5 w-5 sm:h-6 sm:w-6 text-red-500 mr-2 flex-shrink-0 mt-0.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -141,7 +141,7 @@ function Instructions({ onStart }) {
 
           <li className="flex items-start">
             <svg
-              className="h-6 w-6 text-red-500 mr-2 flex-shrink-0"
+              className="h-5 w-5 sm:h-6 sm:w-6 text-red-500 mr-2 flex-shrink-0 mt-0.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -163,7 +163,7 @@ function Instructions({ onStart }) {
         <button
           onClick={onStart}
           disabled={!canStart}
-          className={`w-64 py-4 rounded-xl text-white text-lg font-medium mx-auto block transition-all duration-300 transform
+          className={`w-full sm:w-64 py-3 sm:py-4 rounded-xl text-white text-base sm:text-lg font-medium mx-auto block transition-all duration-300 transform
             ${
               canStart
                 ? "bg-blue-600 hover:bg-blue-700 hover:scale-105 hover:shadow-lg cursor-pointer"
@@ -173,7 +173,7 @@ function Instructions({ onStart }) {
           {countdown > 0 ? (
             <div className="flex items-center justify-center">
               <svg
-                className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                className="animate-spin -ml-1 mr-2 h-4 w-4 sm:h-5 sm:w-5 text-white"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -197,7 +197,7 @@ function Instructions({ onStart }) {
           ) : (
             <div className="flex items-center justify-center">
               <svg
-                className="mr-2 h-5 w-5"
+                className="mr-2 h-4 w-4 sm:h-5 sm:w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
