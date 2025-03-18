@@ -528,9 +528,14 @@ function App() {
       </div>
       <div className="w-[600px] mb-5 text-2xl font-bold text-gray-800 select-none">
         <span>
-          {isInputtingName
-            ? "现在，请你为这幅画简单命名，告诉我你画的是什么。"
-            : challenges[currentChallenge].title}
+          {isInputtingName ? (
+            "现在，请你为这幅画简单命名，告诉我你画的是什么。"
+          ) : (
+            <>
+              【{currentChallenge + 1}/{challenges.length}】
+              {challenges[currentChallenge].title}
+            </>
+          )}
         </span>
         <span class="text-red-400">
           {isInputtingName
