@@ -3,17 +3,21 @@ function rds(degrees) {
 }
 
 function drawBackground(ctx) {
+  // 获取画布中心点
+  const centerX = 250;
+  const centerY = 250;
+
   ctx.strokeStyle = "#000";
   // 绘制一个缺少左下角1/3部分的圆
   ctx.beginPath();
-  // 圆的参数: 圆心(100,100), 半径50
-  // 从 45° (π/4) 开始，到 225° (5π/4) 结束，按顺时针方向绘制
-  ctx.arc(350, 150, 70, rds(-180 + 10), rds(70), false);
+  // 圆的参数: 在画布中央偏右上方，半径70
+  ctx.arc(centerX + 50, centerY - 50, 70, rds(-180 + 10), rds(70), false);
   ctx.stroke();
 
   const squareSize = 80;
-  const squareX = 230;
-  const squareY = 200;
+  // 方块位置调整到画布中央偏左下方
+  const squareX = centerX - 100;
+  const squareY = centerY + 20;
   const cornerLengthC = 15; // 每个角绘制的线段长度
   const cornerLengthD = 50; // 每个角绘制的线段长度
 

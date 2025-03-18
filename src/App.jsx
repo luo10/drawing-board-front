@@ -314,8 +314,8 @@ function App() {
       const canvas = canvasRef.current;
       const context = canvas.getContext("2d", { alpha: false }); // 禁用alpha通道
 
-      canvas.width = 600;
-      canvas.height = 400;
+      canvas.width = 500;
+      canvas.height = 500;
 
       // 先填充白色背景
       context.fillStyle = "white";
@@ -538,7 +538,7 @@ function App() {
       <div className="mb-5 text-right p-2.5 bg-gray-100 rounded text-sm text-gray-600 select-none">
         欢迎你，{user.username} (学号: {user.student_id})
       </div>
-      <div className="w-[600px] mb-5 text-2xl font-bold text-gray-800 select-none">
+      <div className="w-[500px] mb-5 text-2xl font-bold text-gray-800 select-none">
         <span>
           {isInputtingName ? (
             "现在，请你为这幅画简单命名，告诉我你画的是什么。"
