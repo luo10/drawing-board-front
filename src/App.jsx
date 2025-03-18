@@ -319,6 +319,10 @@ function App() {
       setFirstStrokeDelay(null);
       setStartTime(null);
       setEndTime(null);
+      // 立即更新到下一个挑战的编号，而不是等倒计时结束
+      setCurrentChallenge((prev) => prev + 1);
+      // 重置时间为5分钟
+      setTimeLeft(300);
     }
 
     function handleSubmissionError(err) {
@@ -375,7 +379,6 @@ function App() {
       setStrokeCount(0);
       setUndoCount(0);
       setRedoCount(0);
-      setTimeLeft(300); // 重置时间为5分钟
       setCanDraw(false); // 初始不允许绘画
       setHasStartedDrawing(false); // 重置开始绘画状态
 
@@ -387,43 +390,43 @@ function App() {
       setEndTime(null);
 
       // 如果已经完成所有挑战，重置总用时
-      if (currentChallenge >= challenges.length - 1) {
+      if (currentChallenge >= challenges.length) {
         setTotalUsedTime(0);
         setIsCompleted(true); // 标记为已完成所有任务
       }
 
-      // 进入下一个挑战
-      if (currentChallenge < challenges.length - 1) {
-        setCurrentChallenge((prev) => prev + 1);
+      // 重新初始化画布
+      const canvas = canvasRef.current;
+      const context = contextRef.current;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = "white";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.globalAlpha = 1.0;
+      context.globalCompositeOperation = "source-over";
+      context.strokeStyle = "black";
+      context.fillStyle = "black";
+      context.lineWidth = 3;
+      saveState();
 
-        // 重新初始化画布
-        const canvas = canvasRef.current;
-        const context = contextRef.current;
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.fillStyle = "white";
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.globalAlpha = 1.0;
-        context.globalCompositeOperation = "source-over";
-        context.strokeStyle = "black";
-        context.fillStyle = "black";
-        context.lineWidth = 3;
-        saveState();
-
-        // 关键修改：检查是否是第一次绘画
-        if (isFirstEntry) {
-          // 如果是第一次，显示开始按钮
-          setShowStartButton(true);
-        } else {
-          // 不是第一次，自动开始绘画
-          handleStartDrawingSession();
-        }
+      // 关键修改：检查是否是第一次绘画
+      if (isFirstEntry) {
+        // 如果是第一次，显示开始按钮
+        setShowStartButton(true);
+      } else {
+        // 不是第一次，自动开始绘画
+        handleStartDrawingSession();
       }
     }
   }, [showCountdown, countdownValue]);
 
   // 修改时间限制的useEffect
   useEffect(() => {
-    if (showDrawingBoard && hasStartedDrawing && timeLeft > 0) {
+    if (
+      showDrawingBoard &&
+      hasStartedDrawing &&
+      timeLeft > 0 &&
+      !isInputtingName
+    ) {
       const timer = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
@@ -431,7 +434,7 @@ function App() {
     } else if (timeLeft === 0) {
       finishDrawing();
     }
-  }, [timeLeft, showDrawingBoard, hasStartedDrawing]);
+  }, [timeLeft, showDrawingBoard, hasStartedDrawing, isInputtingName]);
 
   useEffect(() => {
     // 添加防止页面滚动和缩放的处理
@@ -655,10 +658,14 @@ function App() {
         </span>
       </div>
 
-      <div className="mb-5">
-        剩余时间: {Math.floor(timeLeft / 60)}:
-        {(timeLeft % 60).toString().padStart(2, "0")}
-      </div>
+      {/* 只在非命名阶段显示倒计时 */}
+      {!isInputtingName && (
+        <div className="mb-5">
+          剩余时间: {Math.floor(timeLeft / 60)}:
+          {(timeLeft % 60).toString().padStart(2, "0")}
+        </div>
+      )}
+
       <div className="relative">
         <canvas
           ref={canvasRef}
