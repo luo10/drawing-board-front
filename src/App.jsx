@@ -347,29 +347,56 @@ function App() {
       const canvas = canvasRef.current;
       const context = canvas.getContext("2d", { alpha: false }); // 禁用alpha通道
 
-      canvas.width = 500;
-      canvas.height = 500;
+      // 响应式画布尺寸，适配不同屏幕大小
+      const setCanvasSize = () => {
+        const container = canvas.parentElement;
+        const containerWidth = container.clientWidth;
+        // 确保画布尺寸不超过屏幕宽度
+        const size = Math.min(500, containerWidth - 20);
+        canvas.width = size;
+        canvas.height = size;
 
-      // 先填充白色背景
-      context.fillStyle = "white";
-      context.fillRect(0, 0, canvas.width, canvas.height);
+        // 重新填充白色背景
+        context.fillStyle = "white";
+        context.fillRect(0, 0, canvas.width, canvas.height);
 
-      // 设置画笔属性
-      context.globalAlpha = 1.0; // 设置完全不透明
-      context.globalCompositeOperation = "source-over";
-      context.strokeStyle = "black";
-      context.fillStyle = "black";
-      context.lineWidth = 3;
-      context.lineCap = "round";
-      context.lineJoin = "round";
-      context.imageSmoothingEnabled = false; // 禁用抗锯齿
+        // 设置画笔属性
+        context.globalAlpha = 1.0; // 设置完全不透明
+        context.globalCompositeOperation = "source-over";
+        context.strokeStyle = "black";
+        context.fillStyle = "black";
+        context.lineWidth = 3;
+        context.lineCap = "round";
+        context.lineJoin = "round";
+        context.imageSmoothingEnabled = false; // 禁用抗锯齿
+
+        // 只有在已经开始绘画的状态下才绘制背景提示
+        // 放到这里确保每次画布尺寸变化时都会重新绘制背景
+        if (hasStartedDrawing && challenges[currentChallenge].drawBackground) {
+          // 保存当前上下文状态
+          context.save();
+
+          // 设置缩放比例以适应当前画布尺寸
+          const scale = size / 500; // 计算缩放比例
+          context.scale(scale, scale);
+
+          // 应用绘制背景函数
+          challenges[currentChallenge].drawBackground(context);
+
+          // 恢复上下文状态
+          context.restore();
+        }
+      };
+
+      setCanvasSize();
       contextRef.current = context;
 
-      // 只有在已经开始绘画的状态下才绘制背景提示
-      if (hasStartedDrawing && challenges[currentChallenge].drawBackground) {
-        challenges[currentChallenge].drawBackground(context);
-        saveState();
-      }
+      // 添加窗口大小变化监听，响应式调整画布
+      window.addEventListener("resize", setCanvasSize);
+
+      return () => {
+        window.removeEventListener("resize", setCanvasSize);
+      };
     }
   }, [showDrawingBoard, currentChallenge, hasStartedDrawing]);
 
@@ -691,18 +718,18 @@ function App() {
   }
 
   return (
-    <div className="flex flex-col items-center p-5 select-none touch-none">
-      <div className="mb-5 text-right p-2.5 bg-gray-100 rounded text-sm text-gray-600 select-none">
+    <div className="flex flex-col items-center p-2 sm:p-5 select-none touch-none max-w-full">
+      <div className="w-full mb-3 sm:mb-5 text-right p-2.5 bg-gray-100 rounded text-sm text-gray-600 select-none">
         欢迎你，{user.username} (学号: {user.student_id})
       </div>
 
       {/* 整合标题、画板、操作按钮和倒计时的卡片 */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-100 p-5 mb-5">
+      <div className="bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-5 mb-3 sm:mb-5 w-full max-w-xl">
         {/* 标题部分 */}
         {isInputtingName ? (
-          <div className="text-center mb-5">
+          <div className="text-center mb-3 sm:mb-5">
             <svg
-              className="h-8 w-8 mx-auto mb-2 text-blue-600"
+              className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-1 sm:mb-2 text-blue-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -714,16 +741,16 @@ function App() {
                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
               />
             </svg>
-            <h2 className="text-2xl font-bold text-gray-800">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
               请为你的画作命名
             </h2>
           </div>
         ) : (
-          <div className="mb-5">
-            <div className="flex justify-between items-center mb-3">
-              <div className="flex items-center">
+          <div className="mb-3 sm:mb-5">
+            <div className="flex flex-wrap justify-between items-center mb-2 sm:mb-3">
+              <div className="flex items-center mb-2 sm:mb-0">
                 <svg
-                  className="h-6 w-6 text-blue-600 mr-2"
+                  className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mr-1 sm:mr-2"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -735,14 +762,16 @@ function App() {
                     d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                   />
                 </svg>
-                <h2 className="text-2xl font-bold text-gray-800">绘画挑战</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+                  绘画挑战
+                </h2>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 {/* 剩余时间显示 */}
                 {!isInputtingName && (
-                  <div className="flex items-center justify-center px-3 py-1.5 bg-blue-50 rounded-lg">
+                  <div className="flex items-center justify-center px-2 sm:px-3 py-1 sm:py-1.5 bg-blue-50 rounded-lg">
                     <svg
-                      className="h-5 w-5 text-blue-600 mr-1.5"
+                      className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mr-1 sm:mr-1.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -754,7 +783,7 @@ function App() {
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <div className="flex items-center text-blue-700 font-mono font-bold">
+                    <div className="flex items-center text-blue-700 font-mono font-bold text-sm sm:text-base">
                       <span>{Math.floor(timeLeft / 60)}</span>
                       <span
                         className={`mx-0.5 ${
@@ -767,17 +796,17 @@ function App() {
                     </div>
                   </div>
                 )}
-                <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
+                <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full">
                   {currentChallenge + 1}/{challenges.length}
                 </span>
               </div>
             </div>
-            <div className="border-b border-gray-100 mb-3"></div>
-            <h3 className="text-xl font-bold text-gray-700 mb-2">
+            <div className="border-b border-gray-100 mb-2 sm:mb-3"></div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-700 mb-1 sm:mb-2">
               {challenges[currentChallenge].title}
             </h3>
             <p
-              className={`text-base ${
+              className={`text-sm sm:text-base ${
                 showStartButton ? "text-blue-600 font-semibold" : "text-red-500"
               }`}
             >
@@ -789,7 +818,7 @@ function App() {
         )}
 
         {/* 画板部分 */}
-        <div className="relative">
+        <div className="relative w-full">
           <canvas
             ref={canvasRef}
             className="border border-gray-300 mb-3 touch-none select-none bg-white mx-auto"
@@ -856,7 +885,6 @@ function App() {
               const pressure = point.pressure;
               ctx.globalAlpha = 1.0;
               ctx.globalCompositeOperation = "source-over";
-              // ctx.lineWidth = 3 * (pressure * 1.5); // 基于3的线宽进行压感调整
               ctx.lineWidth = 3;
               ctx.strokeStyle = "black";
               ctx.fillStyle = "black";
@@ -877,13 +905,14 @@ function App() {
             style={{
               cursor:
                 canDraw && hasStartedDrawing ? "crosshair" : "not-allowed",
+              touchAction: "none", // 防止触摸操作引起页面滚动
             }}
           />
 
           {!hasStartedDrawing && showStartButton && (
             <button
               onClick={handleStartDrawingSession}
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 px-6 py-3 text-lg bg-blue-600 hover:bg-blue-700 text-white border-none rounded-full cursor-pointer select-none touch-manipulation"
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 px-4 sm:px-6 py-2 sm:py-3 text-base sm:text-lg bg-blue-600 hover:bg-blue-700 text-white border-none rounded-full cursor-pointer select-none touch-manipulation"
             >
               开始绘画
             </button>
@@ -892,7 +921,7 @@ function App() {
 
         {/* 操作按钮组 */}
         {!isInputtingName && (
-          <div className="flex justify-center gap-3 mt-1">
+          <div className="flex justify-center gap-2 sm:gap-3">
             <button
               onClick={undo}
               disabled={
@@ -901,12 +930,12 @@ function App() {
                   .slice(0, historyIndex)
                   .some((h) => h.challenge === currentChallenge)
               }
-              className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white border-none rounded-lg cursor-pointer disabled:bg-gray-300 select-none touch-manipulation text-sm sm:text-base"
             >
               <span className="flex items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 mr-1"
+                  className="h-3 w-3 sm:h-4 sm:w-4 mr-1"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -929,13 +958,13 @@ function App() {
                   .slice(historyIndex + 1)
                   .some((h) => h.challenge === currentChallenge)
               }
-              className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white border-none rounded-lg cursor-pointer disabled:bg-gray-300 select-none touch-manipulation text-sm sm:text-base"
             >
               <span className="flex items-center">
                 恢复
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 ml-1"
+                  className="h-3 w-3 sm:h-4 sm:w-4 ml-1"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -952,7 +981,7 @@ function App() {
             <button
               onClick={finishDrawing}
               disabled={!canDraw || strokeCount === 0}
-              className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white border-none rounded-lg cursor-pointer disabled:bg-gray-300 select-none touch-manipulation text-sm sm:text-base"
             >
               完成绘画
             </button>
