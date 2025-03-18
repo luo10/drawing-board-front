@@ -166,7 +166,7 @@ function Instructions({ onStart }) {
           className={`w-64 py-4 rounded-xl text-white text-lg font-medium mx-auto block transition-all duration-300 transform
             ${
               canStart
-                ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 hover:scale-105 hover:shadow-lg cursor-pointer"
+                ? "bg-blue-600 hover:bg-blue-700 hover:scale-105 hover:shadow-lg cursor-pointer"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
         >
