@@ -42,8 +42,8 @@ function App() {
   const [isFirstEntry, setIsFirstEntry] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false); // 添加完成状态
   const [surveyUrl, setSurveyUrl] = useState(
-    "https://your-next-experiment-url.com"
-  ); // 设置默认问卷链接
+    "https://www.credamo.com/s/YfiU7r/"
+  ); // 设置问卷链接
   // 添加确认弹窗相关状态
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmCallback, setConfirmCallback] = useState(null);
@@ -680,7 +680,7 @@ function App() {
           <div className="flex justify-center gap-5">
             <button
               onClick={handleSurvey}
-              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md"
+              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md cursor-pointer"
             >
               前往填写问卷
             </button>
