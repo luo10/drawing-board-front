@@ -4,6 +4,7 @@ import Instructions from "./components/Instructions";
 import { fileApi } from "./services/api";
 import { API_CONFIG } from "./config/api";
 import { challenges } from "./data/challenges";
+import { getFullDeviceInfo, getIpAddress } from "./utils/clientInfo";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -50,12 +51,23 @@ function App() {
   // 处理开始绘画逻辑
   const handleStartDrawing = async () => {
     try {
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GENERATE_EXAM}?student_id=${user.student_id}`,
-        {
-          method: "GET",
-        }
+      // 获取设备信息和IP地址
+      const deviceInfo = getFullDeviceInfo();
+      const ipAddress = await getIpAddress();
+      const loginTime = new Date().toISOString();
+
+      // 创建请求URL和参数
+      const url = new URL(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GENERATE_EXAM}`
       );
+      url.searchParams.append("student_id", user.student_id);
+      url.searchParams.append("login_time", loginTime);
+      url.searchParams.append("ip_address", ipAddress);
+      url.searchParams.append("device_info", JSON.stringify(deviceInfo));
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+      });
 
       const data = await response.json();
       if (data.status_code !== 0 || !data.data.exam_id) {
