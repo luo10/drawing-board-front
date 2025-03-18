@@ -88,9 +88,17 @@ function Login({ onLogin }) {
     const formData = new FormData(e.target);
     const name = formData.get("name");
     const studentId = formData.get("studentId");
+    const phone = formData.get("phone");
 
-    if (!name || !studentId) {
+    if (!name || !studentId || !phone) {
       setError("请填写完整信息");
+      return;
+    }
+
+    // 简单的手机号验证
+    const phoneRegex = /^1\d{10}$/;
+    if (!phoneRegex.test(phone)) {
+      setError("请输入有效的手机号码（以1开头的11位数字）");
       return;
     }
 
@@ -105,7 +113,11 @@ function Login({ onLogin }) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ username: name, student_id: studentId }),
+          body: JSON.stringify({
+            username: name,
+            student_id: studentId,
+            phone: phone,
+          }),
         }
       );
 
@@ -145,7 +157,20 @@ function Login({ onLogin }) {
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck="false"
+          enterKeyHint="next"
+          disabled={isLoading}
+        />
+        <Input
+          type="tel"
+          name="phone"
+          placeholder="请输入手机号"
+          required
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck="false"
           enterKeyHint="done"
+          pattern="[0-9]*"
+          inputMode="numeric"
           disabled={isLoading}
         />
         <Button type="submit" disabled={isLoading}>
