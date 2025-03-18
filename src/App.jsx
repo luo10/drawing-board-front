@@ -507,7 +507,7 @@ function App() {
     return (
       <div
         className="fixed inset-0 flex items-center justify-center z-50 select-none touch-none"
-        style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
       >
         <div className="bg-white rounded-lg p-6 w-80 shadow-xl transform transition-all duration-300 scale-100">
           <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
@@ -528,6 +528,49 @@ function App() {
               className="px-5 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
             >
               确定
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 命名弹窗组件
+  const NameInputModal = () => {
+    if (!isInputtingName) return null;
+
+    return (
+      <div
+        className="fixed inset-0 flex items-center justify-center z-50 select-none touch-none"
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
+      >
+        <div className="bg-white rounded-lg p-6 w-96 shadow-xl transform transition-all duration-300 scale-100">
+          <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
+            为你的画作命名
+          </h3>
+          <p className="mb-4 text-gray-600 text-center">
+            请用尽可能简洁的中文词汇告诉我你画的是什么
+          </p>
+          <div className="mb-5">
+            <input
+              type="text"
+              value={drawingName}
+              onChange={(e) => setDrawingName(e.target.value)}
+              placeholder="请输入画作名称（不超过8个字符）"
+              maxLength={8}
+              className="p-2.5 w-full text-base border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              autoFocus
+              autoComplete="off"
+            />
+          </div>
+          <div className="flex justify-center">
+            <button
+              onClick={submitDrawing}
+              className="px-5 py-2.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+            >
+              {currentChallenge >= challenges.length - 1
+                ? "提交，进入下一环节"
+                : "提交，进入下一幅"}
             </button>
           </div>
         </div>
@@ -595,7 +638,7 @@ function App() {
       <div className="w-[500px] mb-5 text-2xl font-bold text-gray-800 select-none">
         <span>
           {isInputtingName ? (
-            "现在，请你为这幅画简单命名，告诉我你画的是什么。"
+            "请为你的画作命名"
           ) : (
             <>
               【{currentChallenge + 1}/{challenges.length}】
@@ -603,16 +646,16 @@ function App() {
             </>
           )}
         </span>
-        <span class="text-red-400">
+        <span className="text-red-400">
           {isInputtingName
-            ? "确认后点击【提交，进入下一幅】"
+            ? ""
             : showStartButton
             ? "准备好了就请点击【开始绘画】吧"
             : challenges[currentChallenge].tips}
         </span>
       </div>
 
-      <div class="mb-5">
+      <div className="mb-5">
         剩余时间: {Math.floor(timeLeft / 60)}:
         {(timeLeft % 60).toString().padStart(2, "0")}
       </div>
@@ -753,29 +796,6 @@ function App() {
         </div>
       )}
 
-      {isInputtingName && (
-        <div className="mt-5 flex flex-col items-center gap-2.5">
-          <input
-            type="text"
-            value={drawingName}
-            onChange={(e) => setDrawingName(e.target.value)}
-            placeholder="请输入画作名称（不超过8个字符）"
-            maxLength={8}
-            className="p-2 text-base w-[300px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            autoFocus
-            autoComplete="off"
-          />
-          <button
-            onClick={submitDrawing}
-            className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer select-none touch-manipulation"
-          >
-            {currentChallenge >= challenges.length - 1
-              ? "提交，进入下一环节"
-              : "提交, 进入下一幅"}
-          </button>
-        </div>
-      )}
-
       {showCountdown && (
         <div className="text-4xl font-bold text-blue-500 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-5 rounded-lg z-50 select-none">
           {countdownValue}
@@ -784,6 +804,9 @@ function App() {
 
       {/* 确认弹窗 */}
       <ConfirmModal />
+
+      {/* 命名弹窗 */}
+      <NameInputModal />
     </div>
   );
 }
