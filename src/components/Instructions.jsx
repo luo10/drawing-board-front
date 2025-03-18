@@ -1,61 +1,4 @@
-import styled from "styled-components";
 import { useState, useEffect } from "react";
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-`;
-
-const InstructionBox = styled.div`
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 800px;
-`;
-
-const Title = styled.h1`
-  text-align: center;
-  color: #333;
-  margin-bottom: 2rem;
-`;
-
-const List = styled.ul`
-  margin-bottom: 2rem;
-  line-height: 1.6;
-
-  li {
-    margin-bottom: 1rem;
-  }
-`;
-
-const RedText = styled.span`
-  color: red;
-  font-weight: bold;
-`;
-
-const BoldText = styled.span`
-  font-weight: bold;
-`;
-
-const Button = styled.button`
-  padding: 0.8rem 2rem;
-  background-color: ${(props) => (props.disabled ? "#cccccc" : "#007bff")};
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
-  display: block;
-  margin: 0 auto;
-  &:hover {
-    background-color: ${(props) => (props.disabled ? "#cccccc" : "#0056b3")};
-  }
-`;
 
 function Instructions({ onStart }) {
   const [countdown, setCountdown] = useState(10);
@@ -73,10 +16,12 @@ function Instructions({ onStart }) {
   }, [countdown]);
 
   return (
-    <Container>
-      <InstructionBox>
-        <Title>实验须知</Title>
-        <List>
+    <div className="flex flex-col items-center justify-center p-8">
+      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl">
+        <h1 className="text-center text-2xl font-bold text-gray-800 mb-8">
+          实验须知
+        </h1>
+        <ul className="mb-8 space-y-4 text-base leading-relaxed">
           <li>本实验共包含6道绘画题目，每道题目限时5分钟。</li>
           <li>
             每道题目都会提供一个基础轮廓图，请在此基础上使用鼠标进行绘画创作。
@@ -90,23 +35,35 @@ function Instructions({ onStart }) {
           </li>
           <li>
             请认真对待每一幅作品，
-            <RedText>
+            <span className="text-red-500 font-bold">
               尽量让每一幅作品画出的东西不一样，充分发挥你的创造力
-            </RedText>
+            </span>
             。
           </li>
           <li>
-            <BoldText>实验过程中请勿刷新页面或退出，否则数据会丢失</BoldText>。
+            <span className="font-bold">
+              实验过程中请勿刷新页面或退出，否则数据会丢失
+            </span>
+            。
           </li>
-        </List>
+        </ul>
 
-        <Button onClick={onStart} disabled={!canStart}>
+        <button
+          onClick={onStart}
+          disabled={!canStart}
+          className={`px-8 py-3 rounded-md text-white text-base mx-auto block transition-colors
+            ${
+              canStart
+                ? "bg-blue-500 hover:bg-blue-600 cursor-pointer"
+                : "bg-gray-400 cursor-not-allowed"
+            }`}
+        >
           {countdown > 0
             ? `请等待 ${countdown} 秒后开始实验`
             : "我已了解，开始实验"}
-        </Button>
-      </InstructionBox>
-    </Container>
+        </button>
+      </div>
+    </div>
   );
 }
 
