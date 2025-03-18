@@ -796,9 +796,26 @@ function App() {
         </div>
       )}
 
+      {/* 倒计时弹窗 */}
       {showCountdown && (
-        <div className="text-4xl font-bold text-blue-500 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-5 rounded-lg z-50 select-none">
-          {countdownValue}
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 select-none touch-none"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
+        >
+          <div className="bg-white rounded-lg p-8 shadow-xl transform transition-all duration-300 scale-100 flex flex-col items-center">
+            <h3 className="text-xl font-bold mb-2 text-gray-800 text-center">
+              准备开始
+            </h3>
+            <p className="mb-6 text-gray-600 text-center">
+              下一个绘画任务将在倒计时结束后开始
+            </p>
+            <div className="w-24 h-24 flex items-center justify-center rounded-full bg-blue-100 mb-4">
+              <span className="text-5xl font-bold text-blue-500">
+                {countdownValue}
+              </span>
+            </div>
+            <p className="text-sm text-gray-500">请稍候...</p>
+          </div>
         </div>
       )}
 
