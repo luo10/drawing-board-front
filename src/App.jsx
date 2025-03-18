@@ -42,6 +42,9 @@ function App() {
   const [isFirstEntry, setIsFirstEntry] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false); // 添加完成状态
   const [surveyUrl, setSurveyUrl] = useState(""); // 将来用于问卷链接
+  // 添加确认弹窗相关状态
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmCallback, setConfirmCallback] = useState(null);
 
   const handleLogin = (data) => {
     setUser(data.data);
@@ -166,6 +169,22 @@ function App() {
 
   // 完成绘画
   const finishDrawing = () => {
+    // 当绘画笔数小于5笔时，显示自定义确认弹窗
+    if (strokeCount < 5) {
+      const handleConfirm = () => {
+        setShowConfirmModal(false);
+        completeDrawing();
+      };
+
+      setConfirmCallback(() => handleConfirm);
+      setShowConfirmModal(true);
+    } else {
+      completeDrawing();
+    }
+  };
+
+  // 抽取完成绘画的实际逻辑
+  const completeDrawing = () => {
     const endTimeNow = new Date();
     setEndTime(endTimeNow);
 
@@ -481,6 +500,41 @@ function App() {
     }
   };
 
+  // 确认弹窗组件
+  const ConfirmModal = () => {
+    if (!showConfirmModal) return null;
+
+    return (
+      <div
+        className="fixed inset-0 flex items-center justify-center z-50 select-none touch-none"
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+      >
+        <div className="bg-white rounded-lg p-6 w-80 shadow-xl transform transition-all duration-300 scale-100">
+          <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
+            确认提交
+          </h3>
+          <p className="mb-6 text-gray-600 text-center">
+            您只画了不到5笔，确定要完成绘画吗？
+          </p>
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={() => setShowConfirmModal(false)}
+              className="px-5 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+            >
+              取消
+            </button>
+            <button
+              onClick={confirmCallback}
+              className="px-5 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+            >
+              确定
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (!user) {
     return <Login onLogin={handleLogin} />;
   }
@@ -691,7 +745,7 @@ function App() {
           </button>
           <button
             onClick={finishDrawing}
-            disabled={!canDraw}
+            disabled={!canDraw || strokeCount === 0}
             className="px-4 py-2 bg-blue-500 text-white border-none rounded cursor-pointer disabled:bg-gray-300 select-none touch-manipulation"
           >
             完成绘画
@@ -728,25 +782,8 @@ function App() {
         </div>
       )}
 
-      {/* <div className="mb-5 text-left w-full max-w-[600px] select-none">
-        <p>
-          当前题目: {currentChallenge + 1}/{challenges.length}
-        </p>
-        <p>开始时间: {startTime?.toLocaleTimeString()}</p>
-        <p>笔画数: {strokeCount}</p>
-        <p>撤销次数: {undoCount}</p>
-        <p>重做次数: {redoCount}</p>
-        {firstStrokeDelay !== null && (
-          <p>第一笔落笔时间: {firstStrokeDelay}秒</p>
-        )}
-        {totalStrokeDuration > 0 && (
-          <p>落笔总时长: {(totalStrokeDuration / 1000).toFixed(1)}秒</p>
-        )}
-        {endTime && startTime && (
-          <p>本次用时: {((endTime - startTime) / 1000).toFixed(1)}秒</p>
-        )}
-        <p>累计总用时: {totalUsedTime.toFixed(1)}秒</p>
-      </div> */}
+      {/* 确认弹窗 */}
+      <ConfirmModal />
     </div>
   );
 }
