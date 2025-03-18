@@ -552,6 +552,30 @@ function App() {
   const NameInputModal = () => {
     if (!isInputtingName) return null;
 
+    // 添加一个状态标记是否正在输入中文
+    const [isComposing, setIsComposing] = useState(false);
+    const [localName, setLocalName] = useState(drawingName);
+
+    // 当输入法结束时，更新drawingName状态
+    const handleCompositionEnd = (e) => {
+      setIsComposing(false);
+      setDrawingName(e.target.value);
+    };
+
+    // 当输入法开始时，标记正在输入中文
+    const handleCompositionStart = () => {
+      setIsComposing(true);
+    };
+
+    // 处理输入变化
+    const handleChange = (e) => {
+      setLocalName(e.target.value);
+      // 只有在不是中文输入过程中才更新drawingName
+      if (!isComposing) {
+        setDrawingName(e.target.value);
+      }
+    };
+
     return (
       <div
         className="fixed inset-0 flex items-center justify-center z-50 select-none touch-none"
@@ -567,8 +591,10 @@ function App() {
           <div className="mb-5">
             <input
               type="text"
-              value={drawingName}
-              onChange={(e) => setDrawingName(e.target.value)}
+              value={localName}
+              onChange={handleChange}
+              onCompositionStart={handleCompositionStart}
+              onCompositionEnd={handleCompositionEnd}
               placeholder="请输入画作名称（不超过8个字符）"
               maxLength={8}
               className="p-2.5 w-full text-base border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
