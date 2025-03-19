@@ -102,6 +102,24 @@ function App() {
     setCanDraw(true);
     setShowStartButton(false); // 点击开始后隐藏开始按钮
     setStrokesData([]); // 初始化笔画数据
+
+    // 初始化历史记录，保存初始空白画布状态
+    setHistory([]);
+    setHistoryIndex(-1);
+
+    // 使用setTimeout确保在状态更新后和用户开始绘画前保存初始状态
+    setTimeout(() => {
+      if (canvasRef.current) {
+        const canvas = canvasRef.current;
+        const newHistory = [];
+        newHistory.push({
+          imageData: canvas.toDataURL(),
+          challenge: currentChallenge,
+        });
+        setHistory(newHistory);
+        setHistoryIndex(0);
+      }
+    }, 50);
   };
 
   // 保存画布状态
