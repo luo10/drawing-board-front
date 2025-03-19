@@ -137,7 +137,6 @@ function App() {
 
   // 撤销
   const undo = () => {
-    debugger;
     if (historyIndex > 0) {
       let prevIndex = historyIndex - 1;
       // 找到属于当前题目的上一个状态
@@ -158,6 +157,11 @@ function App() {
           ctx.drawImage(img, 0, 0);
           setHistoryIndex(prevIndex);
           setUndoCount((prev) => prev + 1);
+
+          // 检查是否回到初始空白状态
+          if (prevIndex === 0) {
+            setStrokeCount(0); // 如果撤销到初始状态，重置笔画计数
+          }
         };
       }
     }
@@ -165,7 +169,6 @@ function App() {
 
   // 重做
   const redo = () => {
-    debugger;
     if (historyIndex < history.length - 1) {
       let nextIndex = historyIndex + 1;
       // 找到属于当前题目的下一个状态
@@ -186,6 +189,12 @@ function App() {
           ctx.drawImage(img, 0, 0);
           setHistoryIndex(nextIndex);
           setRedoCount((prev) => prev + 1);
+
+          // 如果是从初始状态恢复到有内容的状态，需要更新strokeCount
+          if (historyIndex === 0 && nextIndex > 0) {
+            // 确保strokeCount至少为1，这样完成绘画按钮就会变为可用状态
+            setStrokeCount((prev) => (prev === 0 ? 1 : prev));
+          }
         };
       }
     }
@@ -1025,7 +1034,7 @@ function App() {
               </button>
               <button
                 onClick={finishDrawing}
-                disabled={!canDraw || strokeCount === 0}
+                disabled={!canDraw || strokeCount === 0 || historyIndex === 0}
                 className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white border-none rounded-lg cursor-pointer disabled:bg-gray-300 select-none touch-manipulation text-sm sm:text-base"
               >
                 完成绘画
