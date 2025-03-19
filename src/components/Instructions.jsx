@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 function Instructions({ onStart }) {
   const [countdown, setCountdown] = useState(10);
   const [canStart, setCanStart] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -14,6 +15,11 @@ function Instructions({ onStart }) {
       setCanStart(true);
     }
   }, [countdown]);
+
+  const handleStart = () => {
+    setLoading(true);
+    onStart();
+  };
 
   return (
     <div className="flex flex-col items-center justify-center  sm:p-8">
@@ -161,11 +167,11 @@ function Instructions({ onStart }) {
         </ul>
 
         <button
-          onClick={onStart}
-          disabled={!canStart}
+          onClick={handleStart}
+          disabled={!canStart || loading}
           className={`w-full sm:w-64 py-3 sm:py-4 rounded-xl text-white text-base sm:text-lg font-medium mx-auto block transition-all duration-300 transform
             ${
-              canStart
+              canStart && !loading
                 ? "bg-blue-600 hover:bg-blue-700 hover:scale-105 hover:shadow-lg cursor-pointer"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
@@ -193,6 +199,30 @@ function Instructions({ onStart }) {
                 ></path>
               </svg>
               请等待 {countdown} 秒后开始实验
+            </div>
+          ) : loading ? (
+            <div className="flex items-center justify-center">
+              <svg
+                className="animate-spin -ml-1 mr-2 h-4 w-4 sm:h-5 sm:w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              正在加载中...
             </div>
           ) : (
             <div className="flex items-center justify-center">
