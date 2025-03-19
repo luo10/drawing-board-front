@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 function Instructions({ onStart }) {
-  const [countdown, setCountdown] = useState(10);
+  const [countdown, setCountdown] = useState(1);
   const [canStart, setCanStart] = useState(false);
 
   useEffect(() => {

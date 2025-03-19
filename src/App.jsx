@@ -119,6 +119,7 @@ function App() {
 
   // 撤销
   const undo = () => {
+    debugger;
     if (historyIndex > 0) {
       let prevIndex = historyIndex - 1;
       // 找到属于当前题目的上一个状态
@@ -146,6 +147,7 @@ function App() {
 
   // 重做
   const redo = () => {
+    debugger;
     if (historyIndex < history.length - 1) {
       let nextIndex = historyIndex + 1;
       // 找到属于当前题目的下一个状态
