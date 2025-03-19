@@ -161,6 +161,9 @@ function App() {
           // 检查是否回到初始空白状态
           if (prevIndex === 0) {
             setStrokeCount(0); // 如果撤销到初始状态，重置笔画计数
+          } else {
+            // 每次撤销减少一笔画数
+            setStrokeCount((prev) => (prev > 0 ? prev - 1 : 0));
           }
         };
       }
@@ -191,9 +194,12 @@ function App() {
           setRedoCount((prev) => prev + 1);
 
           // 如果是从初始状态恢复到有内容的状态，需要更新strokeCount
-          if (historyIndex === 0 && nextIndex > 0) {
-            // 确保strokeCount至少为1，这样完成绘画按钮就会变为可用状态
-            setStrokeCount((prev) => (prev === 0 ? 1 : prev));
+          if (historyIndex === 0) {
+            // 设置为1，表示至少有一笔
+            setStrokeCount(1);
+          } else {
+            // 每次恢复增加一笔画数
+            setStrokeCount((prev) => prev + 1);
           }
         };
       }
