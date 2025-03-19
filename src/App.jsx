@@ -651,7 +651,7 @@ function App() {
               onChange={handleChange}
               onCompositionStart={handleCompositionStart}
               onCompositionEnd={handleCompositionEnd}
-              placeholder="请输入画作名称（不超过8个字符）"
+              placeholder="你画的是...（不超过8个字符）"
               maxLength={8}
               className="p-2.5 w-full text-base border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               autoFocus
@@ -960,6 +960,9 @@ function App() {
                 cursor:
                   canDraw && hasStartedDrawing ? "crosshair" : "not-allowed",
                 touchAction: "none", // 防止触摸操作引起页面滚动
+                // 添加CSS变量确保光标始终可见
+                "--cursor-visibility": "visible !important",
+                pointerEvents: "auto",
               }}
             />
 
